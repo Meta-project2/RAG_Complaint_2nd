@@ -10,7 +10,7 @@ DB_CONFIG = {
     "host": "localhost",
     "database": "complaint_db",
     "user": "postgres",
-    "password": "0000",
+    "password": "0000", # ★ 집 비밀번호 확인 필요
     "port": "5432"
 }
 
@@ -21,24 +21,27 @@ def upload_to_db_bulk():
         cursor = conn.cursor()
         print("[*] DB 연결 성공. Bulk 업로드를 시작합니다.")
 
-        vector_files = glob.glob("data/step2_vectors/*.parquet")
+        # pickle 파일 찾기
+        vector_files = glob.glob("data/step2_vectors/*.pkl")
+
+        if not vector_files:
+            print("[!] 업로드할 .pkl 파일이 없습니다.")
+            return
 
         for file_path in vector_files:
-            df = pd.read_parquet(file_path)
-            # 벡터를 리스트 형태로 변환 (DB 저장용)
-            df['embedding'] = df['embedding'].apply(lambda x: x.tolist())
+            # pickle 파일 읽기
+            df = pd.read_pickle(file_path)
             
             print(f"\n[*] {os.path.basename(file_path)} 처리 중 (총 {len(df)}건)...")
 
-            # 대량 처리를 위해 데이터를 일정한 크기(예: 100개)로 나눕니다.
+            # 100개씩 끊어서 처리
             chunk_size = 100
             for i in tqdm(range(0, len(df), chunk_size), desc="  └ Bulk Inserting"):
                 chunk = df.iloc[i : i + chunk_size]
                 
-                # 1. complaints 테이블에 대량 삽입하고 생성된 ID들을 받아옴
-                # RETURNING id를 사용하면 삽입된 순서대로 ID가 반환됩니다.
+                # 1. complaints 테이블 저장
                 complaints_data = [
-                    (row['req_title'], row['req_content'], row['resp_content'], row['resp_dept'])
+                    (row.get('req_title', '제목없음'), row.get('req_content', ''), row.get('resp_content', ''), row.get('resp_dept', ''))
                     for _, row in chunk.iterrows()
                 ]
                 
@@ -48,32 +51,30 @@ def upload_to_db_bulk():
                     RETURNING id;
                 """
                 
-                # execute_values 대신 여기서는 ID를 순서대로 받기 위해 가공된 쿼리 사용
+                # ID를 순서대로 받아오기 위해 하나씩 실행 (여기는 Bulk 아님)
                 ids = []
                 for data in complaints_data:
                     cursor.execute(insert_complaints_query, data)
                     ids.append(cursor.fetchone()[0])
 
-                # 2. 받아온 ID들과 함께 complaint_normalizations 테이블에 대량 삽입
-                # 이 부분은 ID와 매칭된 정보를 한꺼번에 넣습니다.
+                # 2. complaint_normalizations 테이블 저장 (Bulk Insert)
                 norm_data = []
                 for idx, (_, row) in enumerate(chunk.iterrows()):
                     norm_data.append((
-                        ids[idx],              # 위에서 받은 complaint_id
-                        row['processed_body'], # 요약
+                        ids[idx],              # 원본 ID
+                        row.get('processed_body', ''), 
                         row['embedding'],      # 벡터
                         True                   # is_current
                     ))
 
+                # ★ [수정 완료] created_at 제거 (DB 자동 생성)
                 insert_norm_query = """
-                    INSERT INTO complaint_normalizations (complaint_id, neutral_summary, embedding, is_current, created_at)
+                    INSERT INTO complaint_normalizations (complaint_id, neutral_summary, embedding, is_current)
                     VALUES %s
                 """
                 
-                # execute_values는 진짜 Bulk Insert 기능을 수행합니다.
+                # 여기서 한방에 넣습니다 (속도 빠름)
                 execute_values(cursor, insert_norm_query, norm_data)
-                
-                # 한 덩어리(chunk) 처리할 때마다 커밋
                 conn.commit()
 
             print(f"[+] {os.path.basename(file_path)} 완료!")
