@@ -1,5 +1,6 @@
 package com.smart.complaint.routing_system.applicant.repository;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -11,6 +12,7 @@ import com.smart.complaint.routing_system.applicant.domain.UrgencyLevel;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintResponse;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchCondition;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
+import com.smart.complaint.routing_system.applicant.entity.Complaint;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import java.util.List;
@@ -28,23 +30,32 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
     @Override
     public List<ComplaintResponse> search(Long departmentId, ComplaintSearchCondition condition) {
 
-        var results = queryFactory
-                .selectFrom(complaint)
+        // ★ [수정] Tuple로 조회 (민원 + 요약문)
+        List<Tuple> results = queryFactory
+                .select(complaint, normalization.neutralSummary)
+                .from(complaint)
+                // ★ [추가] 요약 정보를 가져오기 위해 조인 (없을 수도 있으니 Left Join)
+                .leftJoin(normalization).on(normalization.complaint.eq(complaint))
                 .where(
-                        // 1. 내 부서 ID와 일치하는 것만 (필수 보안)
                         complaint.currentDepartmentId.eq(departmentId),
-
-                        // 2. 검색 필터들
                         keywordContains(condition.getKeyword()),
                         statusEq(condition.getStatus()),
                         urgencyEq(condition.getUrgency()),
                         hasIncident(condition.getHasIncident())
                 )
-                .orderBy(getOrderSpecifier(condition.getSort())) // 정렬 적용
+                .orderBy(getOrderSpecifier(condition.getSort()))
                 .fetch();
 
+        // ★ [변환] Tuple -> DTO 매핑
         return results.stream()
-                .map(ComplaintResponse::new)
+                .map(tuple -> {
+                    Complaint c = tuple.get(complaint);
+                    String summary = tuple.get(normalization.neutralSummary);
+
+                    ComplaintResponse dto = new ComplaintResponse(c);
+                    dto.setNeutralSummary(summary); // 요약문 주입
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
