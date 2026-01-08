@@ -21,7 +21,7 @@ import com.smart.complaint.routing_system.applicant.service.jwt.OAuth2SuccessHan
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@Profile("!dev")
+//@Profile("!dev")
 public class SecurityConfig {
 
     private final OAuth2Service oAuth2Service;
