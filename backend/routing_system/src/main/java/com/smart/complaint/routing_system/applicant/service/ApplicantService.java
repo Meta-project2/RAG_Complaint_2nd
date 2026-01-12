@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.smart.complaint.routing_system.applicant.config.BusinessException;
+import com.smart.complaint.routing_system.applicant.config.BusinessException;
 import com.smart.complaint.routing_system.applicant.domain.UserRole;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
@@ -26,12 +27,21 @@ public class ApplicantService {
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+    private final BCryptPasswordEncoder encoder;
 
     @Transactional
     public String applicantSignUp(UserLoginRequest loginRequest) {
 
         String hashedPassword = encoder.encode(loginRequest.password());
 
+    public String applicantSignUp(UserLoginRequest loginRequest) {
+
+        String hashedPassword = encoder.encode(loginRequest.password());
+
+        User user = new User(loginRequest.userId(), hashedPassword, loginRequest.displayName(), UserRole.CITIZEN);
+        userRepository.findByUsername(loginRequest.userId()).ifPresent(existingUser -> {
+            throw new BusinessException(ErrorMessage.USER_DUPLICATE);
+        });
         User user = new User(loginRequest.userId(), hashedPassword, loginRequest.displayName(), UserRole.CITIZEN);
         userRepository.findByUsername(loginRequest.userId()).ifPresent(existingUser -> {
             throw new BusinessException(ErrorMessage.USER_DUPLICATE);
