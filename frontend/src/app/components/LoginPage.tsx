@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { springApi } from "../../lib/springApi";
+import { Button } from './applicant/ui/button';
+import { Input } from './applicant/ui/input';
+import { Label } from './applicant/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './applicant/ui/card';
 
 interface LoginPageProps {
   onLogin: (role: 'agent' | 'admin') => void;

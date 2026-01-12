@@ -7,19 +7,14 @@ import com.smart.complaint.routing_system.applicant.service.AiService;
 import com.smart.complaint.routing_system.applicant.service.ApplicantService;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.nio.file.attribute.UserPrincipal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 // 민원인 컨트롤러
 @RestController
@@ -31,12 +26,13 @@ public class ApplicantController {
 
     // 토큰 유효성 검사 엔드포인트
     @GetMapping("/api/auth/validate")
-    public ResponseEntity<?> validateToken(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<?> validateToken(@AuthenticationPrincipal String providerId) {
         // JwtAuthenticationFilter를 거쳐 여기까지 왔다면 토큰은 유효한 것입니다.
-        if (userPrincipal != null) {
-            return ResponseEntity.ok().build(); // 200 OK
+        if (providerId == null) {
+            System.out.println("컨트롤러: 인증된 유저 정보가 없습니다.");
+            return ResponseEntity.status(401).build();
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 401
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/api/complaints")

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import LoginButton from './ui/login-button';
+import LoginButton from './applicant/ui/login-button';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
