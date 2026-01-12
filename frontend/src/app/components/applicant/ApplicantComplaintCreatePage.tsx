@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApplicantComplaintForm, ComplaintFormData } from './ApplicantComplaintForm';
 import { ComplaintPreview } from './ComplaintPreview';
+import Swal from 'sweetalert2';
 
 export default function ApplicantComplaintCreatePage() {
   const navigate = useNavigate();
@@ -26,6 +27,10 @@ export default function ApplicantComplaintCreatePage() {
   const handleSubmit = (data: ComplaintFormData) => {
     console.log("서버로 민원 제출:", data);
     // TODO: 여기에 axios 또는 fetch를 이용한 API 통신 코드를 작성하세요.
+    Swal.fire({
+      title: '민원을 제출하시겠습니까?',
+      text: "제출 후 AI가 민원을 분류하고 최적의 부서에 전달합니다.",
+    })
     alert("민원이 성공적으로 제출되었습니다.");
     navigate('/applicant/complaint');
   };

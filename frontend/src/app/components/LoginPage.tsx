@@ -1,8 +1,5 @@
 import { useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
-import { Button } from './applicant/ui/button';
-import { Input } from './applicant/ui/input';
-import { Label } from './applicant/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './applicant/ui/card';
 
 interface LoginPageProps {
