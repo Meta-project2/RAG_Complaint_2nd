@@ -11,9 +11,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.smart.complaint.routing_system.applicant.config.BusinessException;
 import com.smart.complaint.routing_system.applicant.domain.UserRole;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
+import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
 import com.smart.complaint.routing_system.applicant.entity.User;
+import com.smart.complaint.routing_system.applicant.domain.ErrorMessage;
 
 // 민원인 서비스
 @Service
@@ -22,16 +25,32 @@ public class ApplicantService {
 
     private final ComplaintRepository complaintRepository;
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder encoder;
 
     @Transactional
-    public String signup(String userId, String password, String displayName) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String hashedPassword = encoder.encode(password);
+    public String applicantSignUp(UserLoginRequest loginRequest) {
 
-        User user = new User(userId, hashedPassword, displayName, UserRole.CITIZEN);
+        String hashedPassword = encoder.encode(loginRequest.password());
+
+        User user = new User(loginRequest.userId(), hashedPassword, loginRequest.displayName(), UserRole.CITIZEN);
+        userRepository.findByUsername(loginRequest.userId()).ifPresent(existingUser -> {
+            throw new BusinessException(ErrorMessage.USER_DUPLICATE);
+        });
         userRepository.save(user);
 
-        return "User registered successfully";
+        return "회원가입에 성공하였습니다.";
+    }
+
+    public String[] applicantLogin(UserLoginRequest loginRequest) {
+
+        User user = userRepository.findByUsername(loginRequest.userId())
+                .orElseThrow(() -> new BusinessException(ErrorMessage.USER_NOT_FOUND));
+
+        if (!encoder.matches(loginRequest.password(), user.getPassword())) {
+            throw new BusinessException(ErrorMessage.INVALID_PASSWORD);
+        }
+
+        return new String[] { String.valueOf(user.getId()), user.getRole().name() };
     }
 
     public List<ComplaintDto> getTop3RecentComplaints(String applicantId) {

@@ -14,7 +14,7 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
-    
+
     // jwt 생성키
     @Value("${JWT_SECRET}")
     private String jwtSecret;
@@ -35,25 +35,6 @@ public class JwtTokenProvider {
         // 토큰에 담을 정보: 이름, 이메일
         Claims claims = Jwts.claims().setSubject(name);
         claims.put("email", email);
-        // 현재 시간
-        Date now = new Date();
-        return Jwts.builder()
-                // 이름, 이메일 담기
-                .setClaims(claims)
-                // 발행 시간
-                .setIssuedAt(now)
-                // 만료 시간: 현재 시간 + 30분
-                .setExpiration(new Date(now.getTime() + tokenValidMilliSecs))
-                // 서명 방법 지정
-                .signWith(key, SignatureAlgorithm.HS256)
-                // 서명 후 압축 - String
-                .compact();
-    }
-
-    public String createJwtTokenPw(String userId, String password) {
-        // 토큰에 담을 정보: 이름, 비밀번호
-        Claims claims = Jwts.claims().setSubject(userId);
-        claims.put("password", password);
         // 현재 시간
         Date now = new Date();
         return Jwts.builder()
