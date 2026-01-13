@@ -25,6 +25,7 @@ public class AiService {
                 .build();
     }
 
+    /*
     public NormalizationResponse getNormalization(ComplaintDto dto) {
         // Python FastAPI의 ComplaintRequest 구조에 맞춰 Map 생성
         Map<String, String> pythonRequestBody = Map.of(
@@ -43,6 +44,7 @@ public class AiService {
                 })
                 .body(NormalizationResponse.class);
     }
+    */
 
     public List<ComplaintSearchResult> getSimilarityScore(double[] queryEmbedding) {
 

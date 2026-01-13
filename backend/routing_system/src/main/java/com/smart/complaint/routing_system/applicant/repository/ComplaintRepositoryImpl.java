@@ -41,8 +41,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                         keywordContains(condition.getKeyword()),
                         statusEq(condition.getStatus()),
                         urgencyEq(condition.getUrgency()),
-                        hasIncident(condition.getHasIncident())
-                )
+                        hasIncident(condition.getHasIncident()))
                 .orderBy(getOrderSpecifier(condition.getSort())) // 정렬 적용
                 .fetch();
 
@@ -66,8 +65,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                         complaint.id,
                         complaint.title,
                         complaint.body,
-                        similarity.as("score")
-                ))
+                        similarity.as("score")))
                 .from(normalization)
                 .join(normalization.complaint, complaint)
                 .where(normalization.isCurrent.isTrue())
@@ -84,14 +82,11 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                 .select(Projections.constructor(ComplaintDto.class,
                         complaint.id,
                         complaint.title,
-                        complaint.status,
-                        complaint.createdAt
-                        // record의 생성자 파라미터 순서와 데이터 타입을 정확히 맞춰야 합니다.
+                        complaint.status, // 엔티티의 Enum 타입
+                        complaint.createdAt // 엔티티의 LocalDateTime 타입
                 ))
                 .from(complaint)
-                .where(
-                        complaint.applicantId.eq(applicantId)
-                )
+                .where(complaint.applicantId.eq(applicantId))
                 .orderBy(complaint.createdAt.desc())
                 .limit(3)
                 .fetch();
@@ -108,20 +103,20 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                         complaint.body,
                         complaint.status,
                         complaint.createdAt
-                        // record의 생성자 파라미터 순서와 데이터 타입이 정확이 일치해야함
+                // record의 생성자 파라미터 순서와 데이터 타입이 정확이 일치해야함
                 ))
                 .from(complaint)
                 .where(
                         complaint.applicantId.eq(applicantId),
-                        titleContains(keyword)
-                )
+                        titleContains(keyword))
                 .orderBy(complaint.createdAt.desc())
                 .fetch();
     }
 
     // --- 조건 메서드 ---
     private BooleanExpression keywordContains(String keyword) {
-        if (keyword == null || keyword.isEmpty()) return null;
+        if (keyword == null || keyword.isEmpty())
+            return null;
         return complaint.title.contains(keyword)
                 .or(complaint.body.contains(keyword));
     }
@@ -135,7 +130,8 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
     }
 
     private BooleanExpression hasIncident(Boolean hasIncident) {
-        if (hasIncident == null) return null;
+        if (hasIncident == null)
+            return null;
         return hasIncident ? complaint.incidentId.isNotNull() : complaint.incidentId.isNull();
     }
 

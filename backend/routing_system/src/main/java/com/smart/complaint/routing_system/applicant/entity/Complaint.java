@@ -5,7 +5,10 @@ import com.smart.complaint.routing_system.applicant.domain.UrgencyLevel;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -58,11 +61,13 @@ public class Complaint {
     // Enum 매핑 (String으로 저장/조회)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "complaint_status")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     private ComplaintStatus status = ComplaintStatus.RECEIVED;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "urgency", nullable = false, columnDefinition = "urgency_level")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
     private UrgencyLevel urgency = UrgencyLevel.MEDIUM;
 

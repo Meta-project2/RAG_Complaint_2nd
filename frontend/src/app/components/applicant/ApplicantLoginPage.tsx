@@ -16,8 +16,6 @@ const ApplicationLoginPage = () => {
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
 
-        console.log("저장된 토큰:", token);
-
         // 1. 토큰이 아예 없으면 즉시 로딩 해제 -> 로그인 버튼 노출
         if (!token) {
             setIsLoading(false);
@@ -65,11 +63,11 @@ const ApplicationLoginPage = () => {
 
     // 비밀번호 검증 (8자 이상, 영문/숫자/특수문자 포함) - input이 있을때마다 검증
     const validatePw = (pw: string) => {
-        const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        const pwRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,20}$/;
         if (!pw) {
             setPwError('비밀번호를 입력해주세요.');
         } else if (!pwRegex.test(pw)) {
-            setPwError('비밀번호는 8자 이상, 영문/숫자/특수문자를 포함해야 합니다.');
+            setPwError('비밀번호는 8자 이상, 20자 이하의 영문/숫자/특수문자를 포함해야 합니다.');
         } else {
             setPwError('');
         }
@@ -197,7 +195,7 @@ const ApplicationLoginPage = () => {
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     <input
                         type="text"
-                        placeholder="아이디"
+                        placeholder="5~15자의 영문 소문자와 숫자로 입력"
                         onChange={(e) => {
                             setUserId(e.target.value);
                             validateId(e.target.value); // 실시간 검증
@@ -206,7 +204,7 @@ const ApplicationLoginPage = () => {
                     />
                     <input
                         type="password"
-                        placeholder="비밀번호"
+                        placeholder="8자 이상, 영문/숫자/특수문자를 포함"
                         onChange={(e) => {
                             setPassword(e.target.value)
                             validatePw(e.target.value)

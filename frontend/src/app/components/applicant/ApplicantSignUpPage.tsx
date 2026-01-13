@@ -169,7 +169,7 @@ export default function ApplicantSignUpPage({ onGoBack, onSignupSuccess }: Signu
                   setUserId(e.target.value);
                   setIsIdAvailable(null); // Reset check when user types
                 }}
-                placeholder="아이디를 입력하세요"
+                placeholder="아이디는 5~15자의 영문 소문자와 숫자로 입력해주세요."
                 className="flex-1 text-lg h-12"
                 required
               />
@@ -207,7 +207,7 @@ export default function ApplicantSignUpPage({ onGoBack, onSignupSuccess }: Signu
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="비밀번호는 8자 이상, 영문/숫자/특수문자를 포함해야 합니다."
                 className="text-lg h-12 pr-12"
                 required
               />

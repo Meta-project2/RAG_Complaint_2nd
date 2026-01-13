@@ -3,15 +3,20 @@ package com.smart.complaint.routing_system.applicant.controller;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
 import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
+import com.smart.complaint.routing_system.applicant.dto.UserSignUpDto;
 import com.smart.complaint.routing_system.applicant.dto.NormalizationResponse;
+import com.smart.complaint.routing_system.applicant.dto.UserEmailDto;
 import com.smart.complaint.routing_system.applicant.service.AiService;
 import com.smart.complaint.routing_system.applicant.service.ApplicantService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -19,25 +24,28 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 // 민원인 컨트롤러
+@Tag(name = "민원인 컨트롤러", description = "민원인용 민원 관리 API")
 @RestController
 @RequiredArgsConstructor
 public class ApplicantController {
 
-    private final AiService aiService;
     private final ApplicantService applicantService;
 
-    // 회원가입 엔드포인트
+    @Operation(summary = "회원 가입 엔드포인트", description = "아이디, 비밀번호, 이메일, 이름을 받아 회원가입")
     @PostMapping("api/applicant/signup")
-    public ResponseEntity<String> applicantSignUp(@RequestBody UserLoginRequest loginRequest, 
+    public ResponseEntity<String> applicantSignUp(@RequestBody UserSignUpDto signUpDto, 
         @RequestHeader(value = "CROSS-KEY", required = true) String key) {
 
-        String result = applicantService.applicantSignUp(loginRequest, key);
+        String result = applicantService.applicantSignUp(signUpDto, key);
 
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "로그인 엔드포인트", description = "사용자의 아이디, 비밀번호를 통해 로그인")
     @PostMapping("api/applicant/login")
     public ResponseEntity<Map<String, String>> applicantLogin(@RequestBody UserLoginRequest loginRequest) {
 
@@ -48,6 +56,7 @@ public class ApplicantController {
         return ResponseEntity.ok(Map.of("accessToken", token));
     }
 
+    @Operation(summary = "사용자 아이디 중복 확인", description = "중복 확인 버튼 클릭 시 동작, 중복이 있을 경우 알림")
     @PostMapping("api/applicant/check-id")
     public ResponseEntity<Boolean> checkUserIdAvailability(@RequestBody UserLoginRequest loginRequest) {
 
@@ -56,23 +65,25 @@ public class ApplicantController {
         return ResponseEntity.ok(isAvailable);
     }
 
+    @Operation(summary = "이메일로 아이디 조회", description = "아이디 분실 시 이메일을 입력하여 마스킹된 아이디를 반환")
     @PostMapping("/api/applicant/userinfo")
-    public ResponseEntity<Map<String, String>> getUserInfo(@RequestBody UserLoginRequest loginRequest) {
+    public ResponseEntity<Map<String, String>> getUserInfo(@RequestBody UserEmailDto emailDto) {
 
-        String userId = applicantService.getUserIdByEmail(loginRequest.email());
+        String userId = applicantService.getUserIdByEmail(emailDto.email());
 
         return ResponseEntity.ok(Map.of("userId", userId));
     }
 
+    @Operation(summary = "새 임시 비밀번호 발급", description = "이메일을 통해 임시 랜덤 비밀번호 발급")
     @PostMapping("/api/applicant/newpw")
-    public ResponseEntity<Map<String, String>> postMethodName(@RequestBody UserLoginRequest loginRequest) {
+    public ResponseEntity<Map<String, String>> postMethodName(@RequestBody UserEmailDto emailDto) {
         
-        applicantService.updatePassword(loginRequest.email());
+        applicantService.updatePassword(emailDto.email());
         
         return ResponseEntity.ok(null);
     }
     
-    // 토큰 유효성 검사 엔드포인트
+    @Operation(summary = "토큰 유효성 검사 엔드포인트", description = "사용자의 토큰이 유효한지 확인한다.")
     @GetMapping("/api/auth/validate")
     public ResponseEntity<?> validateToken(@AuthenticationPrincipal String providerId) {
         // JwtAuthenticationFilter를 거쳐 여기까지 왔다면 토큰은 유효
@@ -83,19 +94,27 @@ public class ApplicantController {
         return ResponseEntity.ok().build();
     }
 
-    // 사용자 로그인 후 main page 이동 시 로직
-    // 가장 최근에 넣은 미원 3개를 불러옴
+    @Operation(summary = "가장 최근 작성한 민원 3개 조회", description = "JWT에서 사용자의 아이디를 확인하고 이를 통해 민원 조회")
     @GetMapping("/api/applicant/complaints/top3")
     public ResponseEntity<List<ComplaintDto>> getTop3RecentComplaints(@AuthenticationPrincipal String applicantId) {
 
         System.out.println("현재 로그인한 사용자:" + applicantId);
+        
         // 현재 로그인한 사용자의 최근 3개 민원 조회
         List<ComplaintDto> complaints = applicantService.getTop3RecentComplaints(applicantId);
 
         return ResponseEntity.ok(complaints);
     }
 
-    // 사용자의 모든 민원 조회, 키워드 검색 가능
+    @Operation(summary = "민원 상세 조회", description = "민원 ID를 통해 특정 민원의 상세 내역과 답변을 조회")
+    @GetMapping("/api/applicant/complaints/${id}")
+    public ResponseEntity<ComplaintDto> getMethodName(@PathVariable Long id) {
+        
+        return new ResponseEntity<>(null);
+    }
+    
+    // TODO: 기능 추가할 것
+    @Operation(summary = "모든 민원 조회", description = "JWT를 통해 전체 민원을 조회")
     @GetMapping("/api/applicant/complaints")
     public ResponseEntity<List<ComplaintDto>> getAllComplaints(@AuthenticationPrincipal String applicantId,
             String keyword) {
@@ -107,6 +126,10 @@ public class ApplicantController {
         return ResponseEntity.ok(complaints);
     }
 
+
+
+
+    /*
     @PostMapping("/api/applicant/complaints")
     public ResponseEntity<NormalizationResponse> sendComplaints(@AuthenticationPrincipal String applicantId,
             @RequestBody ComplaintDto request) {
@@ -124,4 +147,5 @@ public class ApplicantController {
 
         return ResponseEntity.ok(null);
     }
+    */
 }

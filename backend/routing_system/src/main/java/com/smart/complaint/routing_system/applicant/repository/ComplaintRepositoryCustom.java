@@ -10,6 +10,6 @@ import java.util.List;
 public interface ComplaintRepositoryCustom {
     List<ComplaintResponse> search(Long departmentId, ComplaintSearchCondition condition);
     List<ComplaintSearchResult> findSimilarComplaint(double[] queryEmbedding, int limit);
-    List<ComplaintDto> findTop3RecentComplaintByApplicantId(String applicantId);
+    List<ComplaintDto> findTop3RecentComplaintByApplicantId(String id);
     List<ComplaintDto> findAllByApplicantId(String applicantId, String keyword);
 }

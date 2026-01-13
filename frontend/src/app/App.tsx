@@ -21,6 +21,7 @@ import ApplicantComplaintCreatePage from './components/applicant/ApplicantCompla
 import ApplicantSignUpPage from './components/applicant/ApplicantSignUpPage';
 import ApplicantFindIdPage from './components/applicant/ApplicantFindIdPage';
 import ApplicantResetPwPage from './components/applicant/ApplicantResetPwPage';
+import ApplicantComplaintDetailPage from './components/applicant/ApplicantComplaintDetailPage'
 
 type Page =
   | { type: 'login' }
@@ -109,6 +110,7 @@ function AppContent() {
         <Route path="/applicant/signup" element={<ApplicantSignUpPage />} />
         <Route path="/applicant/find-id" element={<ApplicantFindIdPage />} />
         <Route path="/applicant/find-password" element={<ApplicantResetPwPage />} />
+        <Route path="/applicant/complaints/:id" element={<ApplicantComplaintDetailPage />} />
       </Routes>
     );
   }

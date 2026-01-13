@@ -18,6 +18,7 @@ import com.smart.complaint.routing_system.applicant.config.BusinessException;
 import com.smart.complaint.routing_system.applicant.domain.UserRole;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
+import com.smart.complaint.routing_system.applicant.dto.UserSignUpDto;
 import com.smart.complaint.routing_system.applicant.entity.User;
 import com.smart.complaint.routing_system.applicant.domain.ErrorMessage;
 
@@ -34,7 +35,7 @@ public class ApplicantService {
     private final EmailService emailService;
 
     @Transactional
-    public String applicantSignUp(UserLoginRequest loginRequest, String key) {
+    public String applicantSignUp(UserSignUpDto signUpDto, String key) {
 
         log.info(key);
         if (!"my-secret-key-123".equals(key)) {
@@ -42,20 +43,20 @@ public class ApplicantService {
             throw new BusinessException(ErrorMessage.NOT_ALLOWED);
         }
 
-        String hashedPassword = encoder.encode(loginRequest.password());
+        String hashedPassword = encoder.encode(signUpDto.password());
         User user = User.builder()
-                .username(loginRequest.userId())
+                .username(signUpDto.userId())
                 .password(hashedPassword)
-                .displayName(loginRequest.displayName())
-                .email(loginRequest.email())
+                .displayName(signUpDto.displayName())
+                .email(signUpDto.email())
                 .role(UserRole.CITIZEN)
                 .build();
-        userRepository.findByUsername(loginRequest.userId()).ifPresent(existingUser -> {
-            log.info("중복된 사용자 아이디: " + loginRequest.userId());
+        userRepository.findByUsername(signUpDto.userId()).ifPresent(existingUser -> {
+            log.info("중복된 사용자 아이디: " + signUpDto.userId());
             throw new BusinessException(ErrorMessage.USER_DUPLICATE);
         });
         userRepository.save(user);
-        log.info(loginRequest.userId() + "사용자 생성");
+        log.info(signUpDto.userId() + "사용자 생성");
 
         return "회원가입에 성공하였습니다.";
     }
