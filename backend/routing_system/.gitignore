@@ -30,8 +30,15 @@ out/
 /nbproject/private/
 /nbbuild/
 /dist/
-/nbdist/
+/nbdist/ㄷ
 /.nb-gradle/
 
 ### VS Code ###
 .vscode/
+
+
+# PostgreSQL 데이터 폴더 제외
+postgres_data/
+pgdata/
+
+

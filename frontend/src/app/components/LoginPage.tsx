@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { FileText, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './applicant/ui/card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { springApi } from "../../lib/springApi";
 
 interface LoginPageProps {
   onLogin: (role: 'agent' | 'admin') => void;
@@ -23,7 +27,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setError('');
     setIsLoading(true);
 
-    // // Mock login logic
+    // Mock login logic
     // setTimeout(() => {
     //   if (username && password) {
     //     // For demo: 'admin' logs in as admin, anything else as agent

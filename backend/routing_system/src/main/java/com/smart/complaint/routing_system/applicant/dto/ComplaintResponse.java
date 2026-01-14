@@ -17,6 +17,10 @@ public class ComplaintResponse {
     private UrgencyLevel urgency;
     private String incidentId;  // 사건 ID (있으면 I-2026-001)
 
+    private String neutralSummary; // 민원 내용 요약(LLM)
+
+    private String managerName;
+
     // Entity -> DTO 변환 생성자
     public ComplaintResponse(Complaint complaint) {
         this.originalId = complaint.getId();
@@ -30,8 +34,8 @@ public class ComplaintResponse {
         this.receivedAt = complaint.getReceivedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
         this.status = complaint.getStatus();
 
-        if (complaint.getIncidentId() != null) {
-            this.incidentId = String.format("I-2026-%04d", complaint.getIncidentId());
+        if (complaint.getIncident() != null) {
+            this.incidentId = String.format("I-2026-%04d", complaint.getIncident().getId());
         }
     }
 }

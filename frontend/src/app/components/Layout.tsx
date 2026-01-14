@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, ChevronLeft, ChevronRight, FileText, Layers, Settings, User } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, FileText, Layers, Settings, User, Globe } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
@@ -25,18 +25,28 @@ export function Layout({ children, currentPage, onNavigate, userRole }: LayoutPr
   const agentMenuItems = [
     { id: 'complaints', label: '민원함', icon: FileText },
     { id: 'incidents', label: '사건(군집)', icon: Layers },
+    { id: 'dashboard', label: '민원 처리 통계', icon: Layers },
+    { id: 'reroute-requests', label: '재이관 요청함', icon: FileText },
+    // { id: 'knowledge-base', label: '지식베이스', icon: FileText },
+    // { id: 'user-management', label: '사용자/부서 관리', icon: User },
     // { id: 'settings', label: '설정', icon: Settings },
   ];
 
   const adminMenuItems = [
-    { id: 'dashboard', label: '운영 대시보드', icon: Layers },
+    { id: 'complaints', label: '민원함', icon: FileText },
+        { id: 'incidents', label: '사건(군집)', icon: Layers },
+    { id: 'dashboard', label: '민원 처리 통계', icon: Layers },
     { id: 'reroute-requests', label: '재이관 요청함', icon: FileText },
-    { id: 'knowledge-base', label: '지식베이스', icon: FileText },
     { id: 'user-management', label: '사용자/부서 관리', icon: User },
+    // { id: 'knowledge-base', label: '지식베이스', icon: FileText },
     // { id: 'settings', label: '설정', icon: Settings },
   ];
 
   const menuItems = userRole === 'agent' ? agentMenuItems : adminMenuItems;
+
+  const handleMoveToCivilService = () => {
+    window.location.href = '/applicant/login'; 
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -96,14 +106,22 @@ export function Layout({ children, currentPage, onNavigate, userRole }: LayoutPr
         {/* Top Bar */}
         <header className="h-16 bg-card border-b border-border flex items-center justify-between px-6">
           <div className="flex-1 max-w-xl">
-            <Input
+            {/* <Input
               type="search"
               placeholder="민원/사건 검색"
               className="w-full bg-input-background"
-            />
+            /> */}
           </div>
 
           <div className="flex items-center gap-4">
+            <Button 
+              className="relative gap-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 px-5 py-3"
+              onClick={handleMoveToCivilService}
+            >
+              <Globe className="h-5 w-5 text-indigo-600" />
+              <span className="text-base font-bold">민원인 서비스</span>
+            </Button>      
+                        
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />

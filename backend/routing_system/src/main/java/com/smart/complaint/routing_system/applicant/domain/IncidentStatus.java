@@ -1,10 +1,8 @@
 package com.smart.complaint.routing_system.applicant.domain;
 
-public enum ComplaintStatus {
-    RECEIVED,
-    RECOMMENDED,
+public enum IncidentStatus {
+    OPEN,
     IN_PROGRESS,
-    CLOSED,
     RESOLVED,
-    CANCELED
+    CLOSED
 }

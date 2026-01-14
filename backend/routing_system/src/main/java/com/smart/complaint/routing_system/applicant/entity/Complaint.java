@@ -12,6 +12,8 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -46,6 +48,9 @@ public class Complaint {
     @Column(columnDefinition = "TEXT")
     private String answer;
 
+    @Column(name = "answered_at") // 답변 완료 시간 (필요시 추가)
+    private LocalDateTime answeredAt;
+
     @Column(name = "address_text")
     private String addressText;
 
@@ -71,11 +76,13 @@ public class Complaint {
     @Column(name = "current_department_id")
     private Long currentDepartmentId;
 
+    //AI 최초 예측 부서 (성능 측정용)
     @Column(name = "ai_predicted_department_id")
-    private Long ai_predicted_department_id;
+    private Long aiPredictedDepartmentId;
 
-    @Column(name = "incident_id")
-    private Long incidentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "incident_id")
+    private Incident incident;
 
     @Column(name = "incident_linked_at")
     private LocalDateTime incidentLinkedAt;
@@ -96,4 +103,43 @@ public class Complaint {
 
     @Column(name = "closed_at")
     private LocalDateTime closedAt;
+
+    // [신규] 자식 민원 리스트 추가 (OneToMany)
+    // mappedBy는 ChildComplaint의 필드명 'parentComplaint'와 일치해야 함
+    @Builder.Default
+    @OneToMany(mappedBy = "parentComplaint", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ChildComplaint> childComplaints = new ArrayList<>();
+
+    // 담당자 지정 (Assign)
+    public void assignManager(Long managerId) {
+        this.answeredBy = managerId;
+        this.status = ComplaintStatus.IN_PROGRESS;
+    }
+
+    // 답변 임시 저장 (Draft)
+    public void updateAnswerDraft(String draftAnswer) {
+        this.answer = draftAnswer;
+        // 상태는 변경하지 않음 (IN_PROGRESS 유지)
+    }
+
+    // 답변 완료 및 종결 (Complete)
+    public void completeAnswer(String finalAnswer) {
+        this.answer = finalAnswer;
+        this.answeredAt = LocalDateTime.now();
+        this.status = ComplaintStatus.RESOLVED;
+        this.closedAt = LocalDateTime.now();
+    }
+
+    // 재이관 승인 시 상태 초기화 (Reroute Approved)
+    public void rerouteTo(Long newDepartmentId) {
+        this.currentDepartmentId = newDepartmentId;
+        this.answeredBy = null; // 담당자 초기화
+        this.status = ComplaintStatus.RECEIVED; // 접수 상태로 복귀
+    }
+
+    // 담당자 배정 해제
+    public void releaseManager() {
+        this.answeredBy = null;
+        this.status = ComplaintStatus.RECEIVED;
+    }
 }
