@@ -38,14 +38,14 @@ public class AgentController {
         HttpSession session = request.getSession(false);
 
         // 개발 편의: 세션 없으면 1번 유저(admin)
-        if (session == null || session.getAttribute("LOGIN_USER") == null) {
-            Map<String, Object> mockUser = new HashMap<>();
-            mockUser.put("id", 1L); // ID 1번
-            mockUser.put("username", "admin");
-            mockUser.put("displayName", "김공무(개발용)");
-            mockUser.put("role", "AGENT");
-            return ResponseEntity.ok(mockUser);
-        }
+//        if (session == null || session.getAttribute("LOGIN_USER") == null) {
+//            Map<String, Object> mockUser = new HashMap<>();
+//            mockUser.put("id", 1L); // ID 1번
+//            mockUser.put("username", "admin");
+//            mockUser.put("displayName", "김공무(개발용)");
+//            mockUser.put("role", "AGENT");
+//            return ResponseEntity.ok(mockUser);
+//        }
 
         User user = (User) session.getAttribute("LOGIN_USER");
         Map<String, Object> response = new HashMap<>();

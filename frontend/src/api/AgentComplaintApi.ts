@@ -134,4 +134,9 @@ export const AgentComplaintApi = {
       reason,
     });
   },
+
+  // 7. 로그아웃 요청 (Logout)
+  logout: async () => {
+    await springApi.post("/api/agent/logout");
+  },
 };

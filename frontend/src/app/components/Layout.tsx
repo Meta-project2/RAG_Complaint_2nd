@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, ChevronLeft, ChevronRight, FileText, Layers, Settings, User, Globe } from 'lucide-react';
+import { Bell, ChevronLeft, ChevronRight, FileText, Layers, RotateCcw , User, Map , Globe, ChartNoAxesCombined } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import {
@@ -17,17 +17,20 @@ interface LayoutProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   userRole: 'agent' | 'admin';
+  userName: string;  
+  onLogout: () => void;
 }
 
-export function Layout({ children, currentPage, onNavigate, userRole }: LayoutProps) {
+export function Layout({ children, currentPage, onNavigate, userRole, userName, onLogout }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const agentMenuItems = [
     { id: 'complaints', label: '민원함', icon: FileText },
     { id: 'incidents', label: '중복 민원', icon: Layers },
-    { id: 'reroute-requests', label: '재이관 요청함', icon: FileText },
-    { id: 'dashboard', label: '민원 처리 통계', icon: Layers },
-    { id: 'civil-service', label: '민원인 서비스', icon: Globe },
+    { id: 'reroute-requests', label: '재이관 요청함', icon: RotateCcw },
+    { id: 'dashboard', label: '민원 처리 통계', icon: ChartNoAxesCombined },
+    { id: 'dashboard', label: '민원 지도', icon: Map },
+    { id: 'civil-service', label: '민원인 사이트', icon: Globe },
     // { id: 'knowledge-base', label: '지식베이스', icon: FileText },
     // { id: 'user-management', label: '사용자/부서 관리', icon: User },
     // { id: 'settings', label: '설정', icon: Settings },
@@ -113,7 +116,8 @@ export function Layout({ children, currentPage, onNavigate, userRole }: LayoutPr
                   <User className="h-5 w-5 shrink-0" />
                   {!sidebarCollapsed && (
                     <div className="flex flex-col items-start text-left overflow-hidden">
-                        <span className="text-sm truncate w-full">김담당</span>
+                        {/* [★수정] 실제 이름 표시 */}
+                        <span className="text-sm truncate w-full">{userName}</span> 
                         <Badge variant="secondary" className="text-[10px] h-4 px-1 mt-0.5">
                         {userRole === 'agent' ? '처리 담당자' : '운영 관리자'}
                         </Badge>
@@ -122,12 +126,9 @@ export function Layout({ children, currentPage, onNavigate, userRole }: LayoutPr
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56" side="top" sideOffset={10}>
-                {/* <DropdownMenuLabel>계정</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>내 정보</DropdownMenuItem>
-                <DropdownMenuItem>설정</DropdownMenuItem>
-                <DropdownMenuSeparator /> */}
-                <DropdownMenuItem>로그아웃</DropdownMenuItem>
+                <DropdownMenuItem onClick={onLogout}>
+                  로그아웃
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
         </div>

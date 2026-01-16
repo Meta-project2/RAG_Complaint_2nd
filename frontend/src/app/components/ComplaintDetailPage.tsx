@@ -228,7 +228,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
 
           <div className="flex gap-2">
             {isUnassigned && !isSelectedClosed && (
-              <Button onClick={handleAssign} className="bg-blue-600 hover:bg-blue-700">
+              <Button onClick={handleAssign} className="bg-gray-600 hover:bg-gray-700">
                 <UserCheck className="w-4 h-4 mr-2" /> 담당하기
               </Button>
             )}
@@ -477,7 +477,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
         <ResizableHandle withHandle />
 
         {/* [오른쪽] 답변 패널 */}
-        <ResizablePanel defaultSize={25} minSize={25} className="bg-background border-l">
+        <ResizablePanel defaultSize={0} minSize={0} className="bg-background border-l">
           <div className="flex flex-col h-full">
 
             {/* Header */}

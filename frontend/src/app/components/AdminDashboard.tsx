@@ -65,7 +65,7 @@ const recurringIncidents = [
   { id: 'I-2026-001', title: '강일동 도로 파손 집중 발생', count: 12, trend: '+8' },
   { id: 'I-2025-342', title: '고덕동 불법주차 반복', count: 15, trend: '+5' },
   { id: 'I-2025-340', title: '명일동 소음 민원', count: 8, trend: '+4' },
-  { id: 'I-2025-340', title: '상일동 신호등 민원', count: 8, trend: '+3' },
+  // { id: 'I-2025-340', title: '상일동 신호등 민원', count: 8, trend: '+3' },
 
 ];
 
@@ -165,13 +165,14 @@ export function AdminDashboard() {
       </div> */}
 
       {/* Widgets Grid */}
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6 bg-slate-100/50">
         <div className="grid grid-cols-3 gap-4">
           {/* Widget 1: 민원 유입 추이 */}
-          <Card className="col-span-1">
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">민원 접수 추이</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">민원 접수 추이</CardTitle>
                 <div className="flex gap-2">
                   {/* <Select defaultValue="all">
                     <SelectTrigger className="w-32 bg-input-background">
@@ -201,10 +202,11 @@ export function AdminDashboard() {
           </Card>
 
 
-          <Card>
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">처리 소요시간 분포</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">처리 소요 시간 분포</CardTitle>
                 {/* <div className="flex gap-2">
         <Select defaultValue="all">
           <SelectTrigger className="w-32 bg-input-background">
@@ -220,7 +222,7 @@ export function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="h-[250px] w-full">
+              <div className="h-[180px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
@@ -247,35 +249,58 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          
+
           {/* Widget 5: 라우팅 품질 */}
-          <Card>
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">민원 자동 배정 품질</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 border rounded">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-sm">재이관 승인율</span>
-                </div>
-                <div className="text-xl">87%</div>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">민원 자동 배정 품질</CardTitle>
               </div>
-              <div className="flex items-center justify-between p-3 border rounded">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-orange-600" />
-                  <span className="text-sm">수동 이관율</span>
-                </div>
-                <div className="text-xl">13%</div>
+            </CardHeader>
+            <CardContent>
+              {/* 파이 차트와 동일한 높이 컨테이너 */}
+              <div className="h-[180px] w-full flex items-center justify-center">
+                {(() => {
+                  const successRate = 83; // 실제 데이터 연결 시 이 변수를 사용
+
+                  // 수치에 따른 색상/그림자 결정 함수
+                  let gradientClass = "from-red-500 to-pink-600 shadow-red-200"; // 기본(낮음)
+                  if (successRate >= 80) {
+                    gradientClass = "from-emerald-400 to-cyan-600 shadow-emerald-200"; // 높음 (우수)
+                  } else if (successRate >= 60) {
+                    gradientClass = "from-amber-400 to-orange-500 shadow-orange-200"; // 중간
+                  }
+
+                  return (
+                    <div
+                      className={`
+                        w-40 h-40 rounded-full flex flex-col items-center justify-center 
+                        bg-gradient-to-br ${gradientClass}
+                        shadow-xl text-white transition-all duration-500 ease-in-out
+                      `}
+                    >
+                      <span className="text-4xl font-bold tracking-tight drop-shadow-sm">
+                        {successRate}%
+                      </span>
+                      <span className="text-sm font-medium mt-1 opacity-90">
+                        자동배정 성공률
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
 
 
           {/* Widget 3: 부서 유입·미처리 랭킹 */}
-          <Card className="col-span-1">
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">부서별 접수·처리 현황</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">부서별 접수·처리 현황</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={200}>
@@ -291,39 +316,49 @@ export function AdminDashboard() {
               </ResponsiveContainer>
             </CardContent>
           </Card>
-                    {/* Widget 2: 업무군 분포 */}
-          <Card>
+          {/* Widget 2: 업무군 분포 */}
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">민원 유형 분포</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">민원 유형 분포</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={categoryDistribution}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {categoryDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              {/* 처리 소요시간 분포와 동일한 크기/높이 설정을 위해 div 래퍼 추가 */}
+              <div className="h-[180px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryDistribution}
+                      cx="50%"
+                      cy="45%" // 50% -> 45% 로 조정 (위쪽 여백 확보)
+                      labelLine={false}
+                      // label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) => `${name}`}
+                      outerRadius={80} // 60 -> 80 으로 확대
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {categoryDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
 
           {/* Widget 6: 사건 재발 Top */}
-          <Card>
+          <Card className="col-span-1 border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">반복 민원 Top</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">반복 민원 Top 3</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -344,10 +379,11 @@ export function AdminDashboard() {
           </Card>
 
           {/* Widget 7: 지도 핫스팟 */}
-          <Card>
+          <Card className="col-span-3 border-slate-200 shadow-sm">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">민원 집중 지역</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-1 bg-blue-600 rounded-full" /> {/* 파란색 포인트 바 */}
+                <CardTitle className="text-base font-bold text-slate-900">민원 집중 지역</CardTitle>
                 <div className="flex gap-2">
                   {/* <Select value={mapView} onValueChange={(v: any) => setMapView(v)}>
                     <SelectTrigger className="w-24 h-8 text-xs">
@@ -370,7 +406,7 @@ export function AdminDashboard() {
             </CardHeader>
             <CardContent>
               {/* Mock Map */}
-              <div className="relative h-64 bg-slate-100 rounded border overflow-hidden">
+              <div className="relative h-[500px] bg-slate-100 rounded border overflow-hidden">
                 {/* Map placeholder */}
                 <KakaoMap
                   complaints={complaints}

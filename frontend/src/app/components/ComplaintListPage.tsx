@@ -92,6 +92,10 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
       if (tagsOnly) params.hasTags = true;
 
       const data: any = await AgentComplaintApi.getAll(params);
+
+      console.log("받아온 데이터 타입:", typeof data);
+  console.log("받아온 데이터 구조:", data);
+  console.log("content는 배열인가?:", Array.isArray(data?.content));
       
       if (data && Array.isArray(data.content)) {
           setComplaints(data.content);
@@ -165,7 +169,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="fle x h-full">
       {/* Main Content */}
       <div className={`flex-1 flex flex-col ${selectedComplaintId ? '' : ''}`}>
         
@@ -438,7 +442,10 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
             </Button>
           </div>
 
+
+          
           <div className="p-4 space-y-4">
+            <Card>
             <div>
               <div className="text-xs text-muted-foreground mb-1">민원 ID</div>
               <div className="text-sm font-mono">{selectedComplaintData.id}</div>
@@ -457,7 +464,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
               <div className="text-xs text-muted-foreground mb-1">제목</div>
               <div className="text-sm font-medium">{selectedComplaintData.title}</div>
             </div>
-
+            </Card>
             <div>
               <div className="text-xs text-muted-foreground mb-2 flex items-center"><Sparkles className="w-3 h-3 mr-1"/>AI 요약</div>
               <div className="text-sm p-3 bg-muted rounded border min-h-[80px]">
