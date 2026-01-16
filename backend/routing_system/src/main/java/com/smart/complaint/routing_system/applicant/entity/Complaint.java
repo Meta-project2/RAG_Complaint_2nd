@@ -126,6 +126,11 @@ public class Complaint {
         this.closedAt = LocalDateTime.now();
     }
 
+    // 재이관 요청 시 상태 변경
+    public void statusToReroute(){
+        this.status = ComplaintStatus.RECOMMENDED; //재이관 대기중 상태로 변경
+    }
+
     // 재이관 승인 시 상태 초기화 (Reroute Approved)
     public void rerouteTo(Long newDepartmentId) {
         this.currentDepartmentId = newDepartmentId;
@@ -136,6 +141,11 @@ public class Complaint {
     // 담당자 배정 해제
     public void releaseManager() {
         this.answeredBy = null;
+        this.status = ComplaintStatus.RECEIVED;
+    }
+
+    public void rejectReroute() {
+        // 반려되면 다시 우리 부서의 '접수' 상태로
         this.status = ComplaintStatus.RECEIVED;
     }
 }

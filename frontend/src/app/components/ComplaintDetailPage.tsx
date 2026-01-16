@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { 
-  ArrowLeft, Loader2, FileText, Search as SearchIcon, Send, Sparkles, 
-  FileCheck, ExternalLink, Save, Lock, UserCheck, RefreshCw, UserMinus, User, 
+import {
+  ArrowLeft, Loader2, FileText, Search as SearchIcon, Send, Sparkles,
+  FileCheck, ExternalLink, Save, Lock, UserCheck, RefreshCw, UserMinus, User,
   Check, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -45,12 +45,12 @@ const urgencyMap: Record<string, { label: string; color: string }> = {
 export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPageProps) {
   const [complaint, setComplaint] = useState<ComplaintDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   const [myId, setMyId] = useState<number | null>(null);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string>("");
 
   const [showRerouteDialog, setShowRerouteDialog] = useState(false);
-  const [selectedTargetDept, setSelectedTargetDept] = useState<string>(''); 
+  const [selectedTargetDept, setSelectedTargetDept] = useState<string>('');
   const [rerouteReason, setRerouteReason] = useState('');
 
   const [chatMessages, setChatMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; citations?: any[] }>>([]);
@@ -59,7 +59,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
   const [selectedSource, setSelectedSource] = useState<any>(null);
 
   const [answerContent, setAnswerContent] = useState('');
-  
+
   const knowledgeSources = [
     { id: 'KB-001', type: '매뉴얼', title: '도로 유지보수 업무 매뉴얼', section: '제3장 긴급 보수', confidence: 95, snippet: '긴급도가 높은 도로 파손의 경우 접수 후 24시간 이내 현장 조사 및 임시 조치를 실시하고...' },
     { id: 'KB-002', type: '규정', title: '도로법 시행규칙', section: '제12조', confidence: 88, snippet: '도로관리청은 도로의 파손, 함몰 등으로 인하여 교통 안전에 지장을 초래할 우려가 있는 경우...' },
@@ -78,12 +78,12 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
 
         if (meData) setMyId(meData.id);
         setComplaint(detailData);
-        
+
         // [로직] 가장 최신 민원(리스트의 마지막)을 기본 선택
         if (detailData.history && detailData.history.length > 0) {
-            const latest = detailData.history[detailData.history.length - 1];
-            setSelectedHistoryId(latest.id);
-            if (latest.answer) setAnswerContent(latest.answer);
+          const latest = detailData.history[detailData.history.length - 1];
+          setSelectedHistoryId(latest.id);
+          if (latest.answer) setAnswerContent(latest.answer);
         }
 
       } catch (error) {
@@ -97,8 +97,8 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
   }, [complaintId]);
 
   const handleHistorySelect = (h: ComplaintHistoryDto) => {
-      setSelectedHistoryId(h.id);
-      setAnswerContent(h.answer || '');
+    setSelectedHistoryId(h.id);
+    setAnswerContent(h.answer || '');
   };
 
   const refetchDetail = async () => {
@@ -106,8 +106,8 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
       const data = await AgentComplaintApi.getDetail(complaintId);
       setComplaint(data);
       if (selectedHistoryId) {
-          const current = data.history.find(h => h.id === selectedHistoryId);
-          if (current) setAnswerContent(current.answer || '');
+        const current = data.history.find(h => h.id === selectedHistoryId);
+        if (current) setAnswerContent(current.answer || '');
       }
     } catch (e) { console.error(e); }
   };
@@ -148,12 +148,12 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
       await AgentComplaintApi.reroute(complaint.originalId, Number(selectedTargetDept), rerouteReason);
       toast.success("요청 완료");
       setShowRerouteDialog(false);
-      setSelectedTargetDept(''); 
+      setSelectedTargetDept('');
       setRerouteReason('');
     } catch (e) { toast.error("요청 실패"); }
   };
 
-  const handleSendChat = async() => {
+  const handleSendChat = async () => {
     if (!chatInput.trim()) return;
     const userMessage = chatInput;
     setChatMessages([...chatMessages, { role: 'user', content: userMessage }]);
@@ -161,11 +161,11 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
     setIsChatLoading(true);
 
     try {
-      let numericId = complaintId; 
+      let numericId = complaintId;
       if (typeof complaintId === 'string' && complaintId.includes('-')) {
-          const parts = complaintId.split('-');
-          const lastPart = parts[parts.length - 1];
-          if (!isNaN(parseInt(lastPart))) numericId = parseInt(lastPart).toString(); 
+        const parts = complaintId.split('-');
+        const lastPart = parts[parts.length - 1];
+        if (!isNaN(parseInt(lastPart))) numericId = parseInt(lastPart).toString();
       }
       const response = await fetch(`http://localhost:8000/api/complaints/${numericId}/chat`, {
         method: 'POST',
@@ -195,14 +195,14 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
   const isMine = (myId !== null) && (String(complaint.answeredBy) === String(myId));
   // 담당자는 있는데 내 것은 아님
   const isOthers = !isUnassigned && !isMine;
-  
+
   // 현재 선택된 민원 카드 객체
   const selectedHistory = complaint.history.find(h => h.id === selectedHistoryId);
-  
+
   // [편집 가능 여부 체크]
   const isLatest = selectedHistoryId === complaint.history[complaint.history.length - 1].id;
   const isSelectedClosed = selectedHistory?.status === 'CLOSED' || selectedHistory?.status === 'RESOLVED';
-  
+
   const isEditable = isMine && isLatest && !isSelectedClosed;
 
   return (
@@ -214,18 +214,18 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
             <Button variant="ghost" size="icon" onClick={onBack}><ArrowLeft className="h-5 w-5" /></Button>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-lg font-semibold">{complaint.title}</h1>
                 <Badge className={statusMap[complaint.status]?.color || 'bg-gray-100'}>
                   {statusMap[complaint.status]?.label || complaint.status}
                 </Badge>
-                <Badge className={urgencyMap[complaint.urgency]?.color || 'bg-gray-100'}>
+                <h1 className="text-lg font-semibold">{complaint.title}</h1>
+                {/* <Badge className={urgencyMap[complaint.urgency]?.color || 'bg-gray-100'}>
                   {urgencyMap[complaint.urgency]?.label || complaint.urgency}
-                </Badge>
+                </Badge> */}
               </div>
-              <p className="text-sm text-muted-foreground">{complaint.id}</p>
+              {/* <p className="text-sm text-muted-foreground">{complaint.id}</p> */}
             </div>
           </div>
-          
+
           <div className="flex gap-2">
             {isUnassigned && !isSelectedClosed && (
               <Button onClick={handleAssign} className="bg-blue-600 hover:bg-blue-700">
@@ -246,14 +246,18 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-4 text-sm">
+        <div className="grid grid-cols-8 gap-4 text-sm">
           <div><span className="text-muted-foreground">접수일시: </span><span>{complaint.receivedAt}</span></div>
-          <div><span className="text-muted-foreground">담당부서: </span><span>{complaint.departmentName || '미배정'}</span></div>          
+          <div><span className="text-muted-foreground">담당부서: </span><span>{complaint.departmentName || '미배정'}</span></div>
           <div>
             <span className="text-muted-foreground">담당자: </span>
             <span className={complaint.managerName ? "font-medium" : "text-slate-400"}>
               {complaint.managerName || '미배정'}
             </span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">민원번호: </span>
+            <span className="medium">{complaint.id}</span>
           </div>
           <div>
             <span className="text-muted-foreground">사건: </span>
@@ -263,7 +267,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
       </div>
 
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        
+
         {/* [왼쪽] Tabs */}
         <ResizablePanel defaultSize={75} minSize={40}>
           <Tabs defaultValue="normalization" className="h-full flex flex-col">
@@ -278,105 +282,105 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
             <div className="flex-1 overflow-auto bg-gray-50/30">
               <TabsContent value="normalization" className="m-0 h-full p-6 space-y-4">
                 {complaint.history.map((h) => {
-                    const isSelected = selectedHistoryId === h.id;
-                    const isParent = h.parent;
-                    
-                    if (isSelected) {
-                        return (
-                            <Card key={h.id} className="border-blue-200 shadow-md">
-                                <CardHeader className="bg-blue-50/50 pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <CardTitle className="text-base flex items-center gap-2 text-blue-800">
-                                            <ChevronDown className="w-4 h-4" />
-                                            {h.receivedAt} 
-                                            <span className="text-sm font-normal text-muted-foreground">| {isParent ? '최초 민원' : '추가 민원'}</span>
-                                        </CardTitle>
-                                        <Badge variant="outline">{statusMap[h.status]?.label}</Badge>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="pt-4">
-                                    {isParent ? (
-                                        <div className="grid grid-cols-2 gap-6">
-                                            <div>
-                                                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center"><FileText className="w-3 h-3 mr-1"/> 원문</div>
-                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{h.body}</p>
-                                                {/* <div className="mt-4 space-y-2">
+                  const isSelected = selectedHistoryId === h.id;
+                  const isParent = h.parent;
+
+                  if (isSelected) {
+                    return (
+                      <Card key={h.id} className="border-blue-200 shadow-md">
+                        <CardHeader className="bg-blue-50/50 pb-2">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base flex items-center gap-2 text-blue-800">
+                              <ChevronDown className="w-4 h-4" />
+                              {h.receivedAt}
+                              <span className="text-sm font-normal text-muted-foreground">| {isParent ? '최초 민원' : '추가 민원'}</span>
+                            </CardTitle>
+                            <Badge variant="outline">{statusMap[h.status]?.label}</Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                          {isParent ? (
+                            <div className="grid grid-cols-2 gap-6">
+                              <div>
+                                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center"><FileText className="w-3 h-3 mr-1" /> 원문</div>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{h.body}</p>
+                                {/* <div className="mt-4 space-y-2">
                                                     <div className="flex items-center gap-2 p-2 border rounded text-xs bg-white">
                                                         <FileText className="h-3 w-3 text-muted-foreground" />
                                                         <span className="flex-1">현장사진_01.jpg</span>
                                                     </div>
                                                 </div> */}
-                                            </div>
-                                            <div className="border-l pl-6">
-                                                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center"><Sparkles className="w-3 h-3 mr-1"/> AI 정규화 분석</div>
-                                                {!h.neutralSummary ? (
-                                                    <div className="text-sm text-muted-foreground">분석 데이터 없음</div>
-                                                ) : (
-                                                    <div className="space-y-3 text-sm">
-                                                        <div className="p-3 bg-slate-100 rounded text-slate-700">{h.coreRequest}</div>
-                                                        <div className="grid grid-cols-2 gap-2 text-xs">
-                                                            <div><span className="text-muted-foreground block mb-1">핵심 키워드</span>
-                                                                {/* keywords_jsonb 데이터 출력 */}
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {h.keywords && h.keywords.length > 0 ? (
-                                                                        h.keywords.map((k, i) => (
-                                                                            <Badge key={i} variant="secondary" className="text-xs px-1 py-0">
-                                                                                {k}
-                                                                            </Badge>
-                                                                        ))
-                                                                    ) : (
-                                                                        /* 키워드가 없으면 기존 coreRequest라도 표시 (혹은 '-') */
-                                                                        <span className="text-slate-500"></span>
-                                                                    )}
-                                                                </div></div>
-                                                            <div><span className="text-muted-foreground">위치:</span> {h.coreCause}</div>
-                                                        </div>
-                                                        {/* <div className="flex flex-wrap gap-1">
+                              </div>
+                              <div className="border-l pl-6">
+                                <div className="text-xs font-semibold text-muted-foreground mb-2 flex items-center"><Sparkles className="w-3 h-3 mr-1" /> AI 정규화 분석</div>
+                                {!h.neutralSummary ? (
+                                  <div className="text-sm text-muted-foreground">분석 데이터 없음</div>
+                                ) : (
+                                  <div className="space-y-3 text-sm">
+                                    <div className="p-3 bg-slate-100 rounded text-slate-700">{h.coreRequest}</div>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div><span className="text-muted-foreground block mb-1">핵심 키워드</span>
+                                        {/* keywords_jsonb 데이터 출력 */}
+                                        <div className="flex flex-wrap gap-1">
+                                          {h.keywords && h.keywords.length > 0 ? (
+                                            h.keywords.map((k, i) => (
+                                              <Badge key={i} variant="secondary" className="text-xs px-1 py-0">
+                                                {k}
+                                              </Badge>
+                                            ))
+                                          ) : (
+                                            /* 키워드가 없으면 기존 coreRequest라도 표시 (혹은 '-') */
+                                            <span className="text-slate-500"></span>
+                                          )}
+                                        </div></div>
+                                      <div><span className="text-muted-foreground">위치:</span> {h.coreCause}</div>
+                                    </div>
+                                    {/* <div className="flex flex-wrap gap-1">
                                                             {h.keywords?.map((k, i) => <Badge key={i} variant="secondary" className="text-xs px-1 py-0">{k}</Badge>)}
                                                         </div> */}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        // [수정] 추가 민원: 제목 + 내용 표시
-                                        <div>
-                                            <div className="mb-4">
-                                              <div className="text-xs font-semibold text-muted-foreground mb-1">제목</div>
-                                              <h3 className="font-semibold">{h.title}</h3>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs font-semibold text-muted-foreground mb-1">내용</div>
-                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{h.body}</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        );
-                    } else {
-                        return (
-                            <Card 
-                                key={h.id} 
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
-                                onClick={() => handleHistorySelect(h)}
-                            >
-                                <CardContent className="p-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                                        <div className="text-sm font-medium">
-                                            {h.receivedAt}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {/* 접혔을 때 헤더 텍스트 */}
-                                            {h.parent ? `[최초] ${h.title}` : `[추가] ${h.title.substring(0, 30)}${h.title.length > 30 ? '...' : ''}`}
-                                        </div>
-                                    </div>
-                                    <Badge variant="outline" className="text-xs">{statusMap[h.status]?.label}</Badge>
-                                </CardContent>
-                            </Card>
-                        );
-                    }
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            // [수정] 추가 민원: 제목 + 내용 표시
+                            <div>
+                              <div className="mb-4">
+                                <div className="text-xs font-semibold text-muted-foreground mb-1">제목</div>
+                                <h3 className="font-semibold">{h.title}</h3>
+                              </div>
+                              <div>
+                                <div className="text-xs font-semibold text-muted-foreground mb-1">내용</div>
+                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{h.body}</p>
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  } else {
+                    return (
+                      <Card
+                        key={h.id}
+                        className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        onClick={() => handleHistorySelect(h)}
+                      >
+                        <CardContent className="p-4 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                            <div className="text-sm font-medium">
+                              {h.receivedAt}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {/* 접혔을 때 헤더 텍스트 */}
+                              {h.parent ? `[최초] ${h.title}` : `[추가] ${h.title.substring(0, 30)}${h.title.length > 30 ? '...' : ''}`}
+                            </div>
+                          </div>
+                          <Badge variant="outline" className="text-xs">{statusMap[h.status]?.label}</Badge>
+                        </CardContent>
+                      </Card>
+                    );
+                  }
                 })}
               </TabsContent>
 
@@ -387,29 +391,29 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {complaint.incidentId ? (
-                        <div className="p-4 border rounded bg-muted/50">
+                      <div className="p-4 border rounded bg-muted/50">
                         <div className="flex items-start justify-between mb-3">
-                            <div>
+                          <div>
                             <h3 className="text-sm font-bold mb-1">{complaint.incidentTitle}</h3>
                             <p className="text-xs text-muted-foreground">{complaint.incidentId}</p>
-                            </div>
-                            <Badge className="bg-yellow-100 text-yellow-800">{complaint.incidentStatus}</Badge>
+                          </div>
+                          <Badge className="bg-yellow-100 text-yellow-800">{complaint.incidentStatus}</Badge>
                         </div>
                         <div className="grid grid-cols-3 gap-3 text-sm">
-                            <div>
-                              <span className="text-xs text-muted-foreground">구성민원수</span>
-                              <p>{complaint.incidentComplaintCount}건</p>
-                            </div>
-                            <div>
-                              <span className="text-xs text-muted-foreground">업무군</span>
-                              <p>{complaint.category || '도로/교통'}</p>
-                            </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">구성민원수</span>
+                            <p>{complaint.incidentComplaintCount}건</p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground">업무군</span>
+                            <p>{complaint.category || '도로/교통'}</p>
+                          </div>
                         </div>
-                        </div>
+                      </div>
                     ) : (
-                        <div className="flex h-32 items-center justify-center text-muted-foreground">
-                            연결된 사건(군집)이 없습니다.
-                        </div>
+                      <div className="flex h-32 items-center justify-center text-muted-foreground">
+                        연결된 사건(군집)이 없습니다.
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -441,27 +445,27 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                       )}
                     </ScrollArea>
                     <div className="p-4 border-t border-border space-y-2">
-                        <div className="flex flex-wrap gap-2">
-                            {suggestedPrompts.map(p => <Button key={p} variant="outline" size="sm" onClick={()=>{setChatInput(p); handleSendChat();}}>{p}</Button>)}
-                        </div>
-                        <div className="flex gap-2">
-                            <Input value={chatInput} onChange={e=>setChatInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&handleSendChat()} />
-                            <Button onClick={handleSendChat} disabled={isChatLoading}><Send className="w-4 h-4"/></Button>
-                        </div>
+                      <div className="flex flex-wrap gap-2">
+                        {suggestedPrompts.map(p => <Button key={p} variant="outline" size="sm" onClick={() => { setChatInput(p); handleSendChat(); }}>{p}</Button>)}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} />
+                        <Button onClick={handleSendChat} disabled={isChatLoading}><Send className="w-4 h-4" /></Button>
+                      </div>
                     </div>
                   </div>
                   <div className="bg-muted/30 p-4">
                     <h3 className="text-sm mb-3">검색된 문서</h3>
                     <ScrollArea className="h-full">
-                        {knowledgeSources.map(s => (
-                            <Card key={s.id} className="mb-2 cursor-pointer hover:border-primary" onClick={()=>setSelectedSource(s)}>
-                                <CardContent className="p-3 text-xs space-y-1">
-                                    <div className="flex justify-between"><Badge variant="outline">{s.type}</Badge> <span>{s.confidence}%</span></div>
-                                    <div className="font-bold">{s.title}</div>
-                                    <div className="text-muted-foreground line-clamp-2">{s.snippet}</div>
-                                </CardContent>
-                            </Card>
-                        ))}
+                      {knowledgeSources.map(s => (
+                        <Card key={s.id} className="mb-2 cursor-pointer hover:border-primary" onClick={() => setSelectedSource(s)}>
+                          <CardContent className="p-3 text-xs space-y-1">
+                            <div className="flex justify-between"><Badge variant="outline">{s.type}</Badge> <span>{s.confidence}%</span></div>
+                            <div className="font-bold">{s.title}</div>
+                            <div className="text-muted-foreground line-clamp-2">{s.snippet}</div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </ScrollArea>
                   </div>
                 </div>
@@ -475,57 +479,60 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
         {/* [오른쪽] 답변 패널 */}
         <ResizablePanel defaultSize={25} minSize={25} className="bg-background border-l">
           <div className="flex flex-col h-full">
+
+            {/* Header */}
             <div className="h-14 px-4 border-b flex items-center justify-between bg-card flex-none">
               <span className="font-semibold text-sm">답변 및 처리</span>
               {isSelectedClosed ? <Badge className="bg-green-100 text-green-800">완료</Badge> : <Badge variant="outline">작성 중</Badge>}
             </div>
 
-            {/* 안내 배너 */}
-            {isUnassigned && !isSelectedClosed && (
-              <div className="bg-blue-50 p-4 text-sm text-blue-800 flex items-start gap-3 border-b border-blue-100">
-                <Lock className="w-5 h-5 mt-0.5 shrink-0" />
-                <div><p className="font-medium">권한 없음</p><p className="text-xs mt-1"><b>담당자</b>만 작성이 가능합니다.</p></div>
-              </div>
-            )}
-            {isOthers && (
-               <div className="bg-slate-100 p-4 text-sm text-slate-600 flex items-center gap-3 border-b border-slate-200">
+            {/* Banners */}
+            <div className="flex-none">
+              {isUnassigned && !isSelectedClosed && (
+                <div className="bg-blue-50 p-4 text-sm text-blue-800 flex items-start gap-3 border-b border-blue-100">
+                  <Lock className="w-5 h-5 mt-0.5 shrink-0" />
+                  <div><p className="font-medium">권한 없음</p><p className="text-xs mt-1"><b>담당자</b>만 작성이 가능합니다.</p></div>
+                </div>
+              )}
+              {isOthers && (
+                <div className="bg-slate-100 p-4 text-sm text-slate-600 flex items-center gap-3 border-b border-slate-200">
                   <User className="w-5 h-5 shrink-0" />
                   <span>현재 <b>{complaint.managerName}</b>님이 처리 중입니다.</span>
-               </div>
-            )}
-            {isSelectedClosed && (
-               <div className="bg-blue-50 p-4 text-sm text-blue-800 flex items-start gap-3 border-b border-blue-100">
+                </div>
+              )}
+              {isSelectedClosed && (
+                <div className="bg-blue-50 p-4 text-sm text-blue-800 flex items-start gap-3 border-b border-blue-100">
                   <Check className="w-5 h-5 shrink-0" />
                   <span>이미 처리된 건입니다.</span>
-               </div>
-            )}            
-            {!isLatest && (
+                </div>
+              )}
+              {!isLatest && (
                 <div className="bg-yellow-50 p-4 text-sm text-yellow-800 flex items-center gap-3 border-b border-yellow-100">
-                    <Lock className="w-4 h-4" />
-                    <span>이전 민원은 수정할 수 없습니다.</span>
+                  <Lock className="w-4 h-4" />
+                  <span>이전 민원은 수정할 수 없습니다.</span>
                 </div>
-            )}
+              )}
+            </div>
 
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                     <label className="text-sm font-medium text-muted-foreground">내용</label>
-                     {isEditable && <Button variant="ghost" size="sm" className="text-xs text-blue-600 h-6"><Sparkles className="w-3 h-3 mr-1" /> AI 초안</Button>}
-                  </div>
-                  <Textarea 
-                    placeholder={isEditable ? "답변을 입력하세요." : "작성 권한이 없습니다."}
-                    className="min-h-[400px] resize-none p-4 text-sm"
-                    value={answerContent}
-                    onChange={(e) => setAnswerContent(e.target.value)}
-                    disabled={!isEditable}
-                  />
-                </div>
+            {/* Content Area  */}
+            <div className="flex-1 p-4 min-h-0 flex flex-col">
+              <div className="flex items-center justify-between mb-2 flex-none">
+                <label className="text-sm font-medium text-muted-foreground">내용</label>
+                {isEditable && <Button variant="ghost" size="sm" className="text-xs text-blue-600 h-6"><Sparkles className="w-3 h-3 mr-1" /> AI 초안</Button>}
               </div>
-            </ScrollArea>
 
+              <Textarea
+                placeholder={isEditable ? "답변을 입력하세요." : "작성 권한이 없습니다."}
+                className="flex-1 resize-none p-4 text-sm focus-visible:ring-1"
+                value={answerContent}
+                onChange={(e) => setAnswerContent(e.target.value)}
+                disabled={!isEditable}
+              />
+            </div>
+
+            {/* Footer Buttons  */}
             {isEditable && (
-              <div className="p-4 border-t bg-gray-50/50 grid grid-cols-2 gap-3">
+              <div className="p-4 border-t bg-gray-50/50 grid grid-cols-2 gap-3 flex-none">
                 <Button variant="outline" onClick={() => handleAnswer(true)}><Save className="w-4 h-4 mr-2" /> 저장</Button>
                 <Button onClick={() => handleAnswer(false)}><Send className="w-4 h-4 mr-2" /> 전송</Button>
               </div>
@@ -540,8 +547,8 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
           <DialogHeader><DialogTitle>재이관 요청</DialogTitle><DialogDescription>부서와 사유를 입력하세요.</DialogDescription></DialogHeader>
           <div className="space-y-4 py-4">
             <Select value={selectedTargetDept} onValueChange={setSelectedTargetDept}>
-                <SelectTrigger><SelectValue placeholder="부서 선택" /></SelectTrigger>
-                <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent>
+              <SelectTrigger><SelectValue placeholder="부서 선택" /></SelectTrigger>
+              <SelectContent>{DEPARTMENTS.map(d => <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>)}</SelectContent>
             </Select>
             <Textarea value={rerouteReason} onChange={(e) => setRerouteReason(e.target.value)} placeholder="사유 입력" />
           </div>

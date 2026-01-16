@@ -108,6 +108,49 @@ public class ComplaintService {
                 .build();
 
         rerouteRepository.save(reroute);
+
+        complaint.statusToReroute();
+
+    }
+
+    /**
+     * 3-1. 재이관 승인 (Approve) - 관리자용
+     * - 이력 상태 APPROVED 변경 + 민원 부서 이동 처리
+     */
+    public void approveReroute(Long rerouteId, Long reviewerId) {
+        ComplaintReroute reroute = rerouteRepository.findById(rerouteId)
+                .orElseThrow(() -> new IllegalArgumentException("재이관 요청 내역을 찾을 수 없습니다."));
+
+        if (!"PENDING".equals(reroute.getStatus())) {
+            throw new IllegalStateException("이미 처리된 요청입니다.");
+        }
+
+        // 이력 상태 업데이트 (APPROVED)
+        reroute.process("APPROVED", reviewerId);
+
+        // 민원 실제 부서 이동 및 상태 초기화
+        Complaint complaint = reroute.getComplaint();
+        complaint.rerouteTo(reroute.getTargetDepartmentId());
+    }
+
+    /**
+     * 3-2. 재이관 반려 (Reject) - 관리자용
+     * - 이력 상태 REJECTED 변경 + 민원 상태 원복
+     */
+    public void rejectReroute(Long rerouteId, Long reviewerId) {
+        ComplaintReroute reroute = rerouteRepository.findById(rerouteId)
+                .orElseThrow(() -> new IllegalArgumentException("재이관 요청 내역을 찾을 수 없습니다."));
+
+        if (!"PENDING".equals(reroute.getStatus())) {
+            throw new IllegalStateException("이미 처리된 요청입니다.");
+        }
+
+        // 이력 상태 업데이트 (REJECTED)
+        reroute.process("REJECTED", reviewerId);
+
+        // 민원 상태 원복 (대기중 -> 접수)
+        Complaint complaint = reroute.getComplaint();
+        complaint.rejectReroute();
     }
 
     /**
