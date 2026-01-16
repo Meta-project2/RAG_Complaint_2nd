@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, X, Eye, Loader2, Globe, User, UserCheck, FileText } from 'lucide-react';
+import { Search, Filter, X, Eye, Loader2, Globe, User, UserCheck, FileText, Sparkles } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
@@ -144,7 +144,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
 
         {/* 테이블 영역 */}
         <div className="flex-1 overflow-auto p-6 bg-slate-100/50">
-          <div className="px-6 py-3 flex items-center gap-4 justify-center">
+          <div className=" py-3 flex items-center gap-4 justify-left">
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -164,9 +164,11 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
                   </button>
                 )}
               </div>
-              {/* <Button variant="outline" onClick={fetchData}>검색</Button> */}
+              
             </div>
-
+            <div>
+              <Button className='border-2' variant="outline" onClick={fetchData}>검색</Button>
+            </div>
             <div className="flex flex-wrap gap-2 items-center">
               <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                 <SelectTrigger className="w-32 bg-input-background">
@@ -227,14 +229,14 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
               <Table>
                 <TableHeader className="sticky top-0 bg-slate-300 border-b-2 z-10">
                   <TableRow>
-                    <TableHead className="w-[160px] text-center font-bold text-slate-900 border-r border-slate-300">민원번호</TableHead>
-                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-300">제목</TableHead>
-                    <TableHead className="w-[160px] text-center font-bold text-slate-900 border-r border-slate-300">접수일시</TableHead>
+                    <TableHead className="w-[160px] text-center font-bold text-slate-900 border-r border-slate-400">민원번호</TableHead>
+                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-400">제목</TableHead>
+                    <TableHead className="w-[160px] text-center font-bold text-slate-900 border-r border-slate-400">접수일시</TableHead>
                     {/* <TableHead className="w-[100px] text-center">긴급도</TableHead> */}
-                    <TableHead className="w-[100px] text-center font-bold text-slate-900 border-r border-slate-300">상태</TableHead>
-                    <TableHead className="w-[120px] text-center font-bold text-slate-900 border-r border-slate-300">사건</TableHead>
-                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-300">특이태그</TableHead>
-                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-300">담당자</TableHead>
+                    <TableHead className="w-[100px] text-center font-bold text-slate-900 border-r border-slate-400">상태</TableHead>
+                    <TableHead className="w-[120px] text-center font-bold text-slate-900 border-r border-slate-400">사건</TableHead>
+                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-400">특이태그</TableHead>
+                    <TableHead className="text-center font-bold text-slate-900 border-r border-slate-400">담당자</TableHead>
                     <TableHead className="text-center font-bold text-slate-900">관리</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -252,7 +254,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
                         className={`cursor-pointer hover:bg-slate-100 ${selectedComplaintId === c.id ? 'bg-blue-50/80' : 'border-b border-slate-200'}`} // 선택 시 색상도 살짝 조정
                         onClick={() => setSelectedComplaintId(c.id)}
                       >
-                        <TableCell className="text-sm text-muted-foreground text-center">
+                        <TableCell className="text-sm text-muted-foreground text-center font-mono">
                           {c.id}
                         </TableCell>
 
@@ -373,10 +375,19 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
             </Button>
           </div>
 
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-4 gird">
             <div>
               <div className="text-xs text-muted-foreground mb-1">민원 ID</div>
               <div className="text-sm">{selectedComplaintData.id}</div>
+            </div>
+
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">사건 연결</div>
+              {selectedComplaintData.incidentId ? (
+                <Badge variant="secondary">{selectedComplaintData.incidentId}</Badge>
+              ) : (
+                <span className="text-sm text-muted-foreground">미연결</span>
+              )}
             </div>
 
             <div>
@@ -385,7 +396,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
             </div>
 
             <div>
-              <div className="text-xs text-muted-foreground mb-2">중립 요약</div>
+              <div className="text-xs text-muted-foreground mb-2"><Sparkles className="w-3 h-3 mr-1"/>AI 요약</div>
               <div className="text-sm p-3 bg-muted rounded border min-h-[80px]">
                 {selectedComplaintData.neutralSummary ? (
                   <p className="leading-relaxed">{selectedComplaintData.neutralSummary}</p>
@@ -410,14 +421,7 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
               </div> */}
             </div>
 
-            <div>
-              <div className="text-xs text-muted-foreground mb-1">사건 연결</div>
-              {selectedComplaintData.incidentId ? (
-                <Badge variant="secondary">{selectedComplaintData.incidentId}</Badge>
-              ) : (
-                <span className="text-sm text-muted-foreground">미연결</span>
-              )}
-            </div>
+
             {/* 
             <div className="pt-4 space-y-2">
               <Button className="w-full" onClick={() => onViewDetail(String(selectedComplaintData.id))}>
