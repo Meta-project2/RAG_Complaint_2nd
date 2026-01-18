@@ -4,7 +4,6 @@ import java.security.SecureRandom;
 import java.util.List;
 
 import com.smart.complaint.routing_system.applicant.repository.ComplaintRepository;
-import com.smart.complaint.routing_system.applicant.repository.ComplaintRepositoryImpl;
 import com.smart.complaint.routing_system.applicant.repository.UserRepository;
 import com.smart.complaint.routing_system.applicant.service.jwt.JwtTokenProvider;
 
@@ -22,7 +21,6 @@ import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintHeatMap;
 import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
 import com.smart.complaint.routing_system.applicant.dto.UserSignUpDto;
-import com.smart.complaint.routing_system.applicant.entity.Complaint;
 import com.smart.complaint.routing_system.applicant.entity.User;
 import com.smart.complaint.routing_system.applicant.domain.ErrorMessage;
 

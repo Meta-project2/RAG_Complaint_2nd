@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Calendar, Building2, User, MessageSquare, ArrowUpDown, Home, FileText } from 'lucide-react';
 import Swal from 'sweetalert2';
+import axios from 'axios';
 
 interface Message {
   id: string;
@@ -61,7 +62,7 @@ export default function ComplaintDetail() {
       try {
         setIsLoading(true);
         // 백엔드 상세 조회 API 호출
-        const response = await api.get(`http://localhost:8080/api/applicant/complaints/${id}`);
+        const response = await api.get(`applicant/complaints/${id}`);
         const data = response.data;
 
         // API 데이터를 화면 구조에 맞게 변환 (메시지 배열 생성)
@@ -110,7 +111,7 @@ export default function ComplaintDetail() {
 
   const handleCommentSubmit = async () => {
     try {
-      await api.post(`/api/applicant/complaints/${id}/comments`, {
+      await api.post(`api/applicant/complaints/${id}/comments`, {
         content: newComment
       });
       setNewComment(''); // 입력창 초기화

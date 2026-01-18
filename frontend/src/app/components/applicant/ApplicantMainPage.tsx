@@ -4,7 +4,7 @@ import { RecentComplaints } from './recent-complaints';
 import { ResponseTimeStats } from './response-time-stats';
 import { KeywordCloud } from './keyword-cloud';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from './AxiosInterface';
 import Swal from 'sweetalert2';
 
 interface ComplaintDto {
@@ -112,7 +112,7 @@ const ApplicantMainPage = () => {
         const token = localStorage.getItem('accessToken');
         // 백엔드 API 호출 - 최근 3개의 민원 불러오기
         // 백엔드에서 만든 최신 3개 전용 API 호출
-        const response = await axios.get('http://localhost:8080/api/applicant/complaints/top3', {
+        const response = await api.get('/applicant/complaints/top3', {
           headers: { Authorization: `Bearer ${token}` }
         });
 

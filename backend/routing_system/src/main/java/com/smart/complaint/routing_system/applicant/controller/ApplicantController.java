@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.bind.annotation.RequestParam;
 
 // 민원인 컨트롤러
 @Tag(name = "민원인 컨트롤러", description = "민원인용 민원 관리 API")
@@ -148,7 +147,6 @@ public class ApplicantController {
             @RequestBody ComplaintSubmitDto complaintSubmitDto) {
 
         Long id = complaintService.receiveComplaint(applicantId, complaintSubmitDto);
-        System.out.println(complaintSubmitDto.toString());
         complaintService.analyzeComplaint(id, applicantId, complaintSubmitDto);
 
         return ResponseEntity.ok("전송이 완료되었습니다.");

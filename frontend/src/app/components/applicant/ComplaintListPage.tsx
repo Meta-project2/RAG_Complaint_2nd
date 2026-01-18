@@ -6,6 +6,7 @@ import { Badge } from './ui/badge';
 import { ChevronLeft, ChevronRight, Eye, Search, Calendar, ArrowUpDown, RefreshCcw } from 'lucide-react';
 import api from './AxiosInterface';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface Complaint {
   id: string;
@@ -75,7 +76,7 @@ export default function PastComplaintsPage() {
     const fetchComplaints = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get('http://localhost:8080/api/applicant/complaints');
+        const response = await api.get('/applicant/complaints');
         const formattedData = response.data.map((item: any) => ({
           id: item.id.toString(),
           title: item.title,

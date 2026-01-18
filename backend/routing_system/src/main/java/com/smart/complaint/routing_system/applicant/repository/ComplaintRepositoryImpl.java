@@ -9,7 +9,6 @@ import com.querydsl.core.types.dsl.NumberTemplate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.smart.complaint.routing_system.applicant.domain.ComplaintStatus;
-import com.smart.complaint.routing_system.applicant.domain.UrgencyLevel;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDetailResponse;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintResponse;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchCondition;
@@ -17,9 +16,6 @@ import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDetailDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintHeatMap;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintResponse;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchCondition;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -60,40 +56,41 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                                 keywordContains(condition.getKeyword()),
                                                 statusEq(condition.getStatus()),
                                                 hasIncident(condition.getHasIncident()),
-                                                hasTags(condition.getHasTags())
-                                )
+                                                hasTags(condition.getHasTags()))
                                 .orderBy(getOrderSpecifier(condition.getSort())) // 정렬 적용
                                 .offset(condition.getOffset()) // 건너뛰기
-                                .limit(condition.getSize())    //  10개만 가져오기
+                                .limit(condition.getSize()) // 10개만 가져오기
                                 .fetch();
                 List<ComplaintResponse> content = results.stream()
-                        .map(tuple -> {
-                                Complaint c = tuple.get(complaint);
-                                String summary = tuple.get(normalization.neutralSummary);
-                                String managerName = tuple.get(user.displayName);
+                                .map(tuple -> {
+                                        Complaint c = tuple.get(complaint);
+                                        String summary = tuple.get(normalization.neutralSummary);
+                                        String managerName = tuple.get(user.displayName);
 
-                                ComplaintResponse dto = new ComplaintResponse(c);
-                                dto.setNeutralSummary(summary);
-                                dto.setManagerName(managerName);
-                                return dto;
-                        })
-                        .filter(java.util.Objects::nonNull)
-                        .collect(Collectors.toList());
+                                        ComplaintResponse dto = new ComplaintResponse(c);
+                                        dto.setNeutralSummary(summary);
+                                        dto.setManagerName(managerName);
+                                        return dto;
+                                })
+                                .filter(java.util.Objects::nonNull)
+                                .collect(Collectors.toList());
 
                 Long total = queryFactory
-                        .select(complaint.count())
-                        .from(complaint)
-                        .leftJoin(normalization).on(normalization.complaint.eq(complaint)) // 검색 조건에 normalization 포함시 필요
-                        .where(
-                                complaint.currentDepartmentId.eq(departmentId),
-                                keywordContains(condition.getKeyword()),
-                                statusEq(condition.getStatus()),
-                                hasIncident(condition.getHasIncident()),
-                                hasTags(condition.getHasTags())
-                        )
-                        .fetchOne();
+                                .select(complaint.count())
+                                .from(complaint)
+                                .leftJoin(normalization).on(normalization.complaint.eq(complaint)) // 검색 조건에
+                                                                                                   // normalization 포함시
+                                                                                                   // 필요
+                                .where(
+                                                complaint.currentDepartmentId.eq(departmentId),
+                                                keywordContains(condition.getKeyword()),
+                                                statusEq(condition.getStatus()),
+                                                hasIncident(condition.getHasIncident()),
+                                                hasTags(condition.getHasTags()))
+                                .fetchOne();
 
-                if (total == null) total = 0L;
+                if (total == null)
+                        total = 0L;
 
                 // 3. Page 객체 반환
                 return new PageImpl<>(content, PageRequest.of(condition.getPage() - 1, condition.getSize()), total);
@@ -103,7 +100,6 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         private BooleanExpression hasTags(Boolean hasTags) {
                 return (hasTags != null && hasTags) ? complaint.tag.isNotNull() : null;
         }
-
 
         @Override
         public List<ComplaintSearchResult> findSimilarComplaint(double[] queryEmbedding, int limit) {

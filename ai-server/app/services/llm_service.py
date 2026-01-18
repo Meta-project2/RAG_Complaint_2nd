@@ -4,7 +4,6 @@ import requests
 import json
 from app import database
 from typing import List, Dict
-from konlpy.tag import Okt
 
 OLLAMA_URL = "http://localhost:11434/api"
 MODEL_NAME = "llama3.1"          

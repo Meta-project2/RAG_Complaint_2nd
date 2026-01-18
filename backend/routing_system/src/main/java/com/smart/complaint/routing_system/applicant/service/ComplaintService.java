@@ -193,7 +193,7 @@ public class ComplaintService {
 
     @Transactional
     public void analyzeComplaint(Long id, String applicantId, ComplaintSubmitDto complaintSubmitDto) {
-        String pythonUrl = "http://localhost:8000/api/complaints/preprocess";
+        String pythonUrl = "http://complaint-ai-server:8000/api/complaints/preprocess";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
