@@ -13,9 +13,11 @@ import com.smart.complaint.routing_system.applicant.dto.ComplaintDetailResponse;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintResponse;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchCondition;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
+import com.smart.complaint.routing_system.applicant.dto.ChildComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDetailDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintHeatMap;
+import com.smart.complaint.routing_system.applicant.dto.ComplaintListDto;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -135,18 +137,18 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                                 complaint.createdAt // 엔티티의 LocalDateTime 타입
                                 ))
                                 .from(complaint)
-                                .where(complaint.applicantId.eq(applicantId))
+                                .where(applicantIdEq(applicantId))
                                 .orderBy(complaint.createdAt.desc())
                                 .limit(3)
                                 .fetch();
         }
 
         @Override
-        public List<ComplaintDetailDto> findAllByApplicantId(Long applicantId, String keyword) {
+        public List<ComplaintListDto> findAllByApplicantId(Long applicantId, String keyword) {
                 QComplaint complaint = QComplaint.complaint;
 
                 return queryFactory
-                                .select(Projections.constructor(ComplaintDetailDto.class,
+                                .select(Projections.constructor(ComplaintListDto.class,
                                                 complaint.id,
                                                 complaint.title,
                                                 complaint.body,
@@ -184,6 +186,11 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         private BooleanExpression titleContains(String keyword) {
                 // 검색어가 없으면(null 또는 빈 문자열) null을 반환 -> where 절에서 무시됨
                 return StringUtils.hasText(keyword) ? QComplaint.complaint.title.contains(keyword) : null;
+        }
+
+        private BooleanExpression applicantIdEq(Long applicantId) {
+                // applicantId가 null이면 null을 반환하여 where 절에서 조건이 제외되게 함
+                return applicantId != null ? QComplaint.complaint.applicantId.eq(applicantId) : null;
         }
 
         private OrderSpecifier<?> getOrderSpecifier(String sort) {
@@ -290,17 +297,36 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         }
 
         @Override
-        public List<ComplaintHeatMap> getAllComplaintsWithLatLon(Long applicantId) {
+        public List<ComplaintHeatMap> getAllComplaintsWithLatLon() {
                 QComplaint complaint = QComplaint.complaint;
 
                 return queryFactory
                                 .select(Projections.constructor(ComplaintHeatMap.class,
                                                 complaint.id,
+                                                complaint.title,
+                                                complaint.status,
+                                                complaint.createdAt,
                                                 complaint.lat,
                                                 complaint.lon))
                                 .from(complaint)
-                                .where(
-                                                complaint.applicantId.eq(applicantId))
+                                .fetch();
+        }
+
+        @Override
+        public List<ChildComplaintDto> findChildComplaintsByParentId(Long parentId) {
+                QChildComplaint childComplaint = QChildComplaint.childComplaint;
+                return queryFactory
+                                .select(Projections.constructor(ChildComplaintDto.class,
+                                                childComplaint.id,
+                                                childComplaint.title,
+                                                childComplaint.body,
+                                                childComplaint.answer,
+                                                childComplaint.status,
+                                                childComplaint.createdAt,
+                                                childComplaint.updatedAt))
+                                .from(childComplaint)
+                                .where(childComplaint.parentComplaint.id.eq(parentId))
+                                .orderBy(childComplaint.createdAt.asc()) // 시간순 정렬 (타임라인용)
                                 .fetch();
         }
 }

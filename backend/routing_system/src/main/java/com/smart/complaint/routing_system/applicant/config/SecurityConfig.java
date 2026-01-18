@@ -87,7 +87,9 @@ public class SecurityConfig {
                                                 .permitAll()
                                                 .requestMatchers("/api/applicant/signup", "/api/applicant/check-id",
                                                                 "/api/applicant/login", "/api/applicant/userinfo",
-                                                                "/api/applicant/newpw")
+                                                                "/api/applicant/newpw",
+                                                                "/api/applicant/complaints/top3",
+                                                                "/api/applicant/heatmap")
                                                 .permitAll()
                                                 .requestMatchers("/api/applicant/**").authenticated()
                                                 .anyRequest().authenticated())
