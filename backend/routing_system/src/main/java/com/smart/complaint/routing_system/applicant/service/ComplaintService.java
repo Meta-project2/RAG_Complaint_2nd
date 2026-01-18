@@ -192,7 +192,7 @@ public class ComplaintService {
     }
 
     @Transactional
-    public void analyzeComplaint(Long id, ComplaintSubmitDto complaintSubmitDto) {
+    public void analyzeComplaint(Long id, String applicantId, ComplaintSubmitDto complaintSubmitDto) {
         String pythonUrl = "http://localhost:8000/api/complaints/preprocess";
 
         HttpHeaders headers = new HttpHeaders();
@@ -200,7 +200,12 @@ public class ComplaintService {
         Map<String, Object> pythonRequest = new HashMap<>();
         pythonRequest.put("id", id); // 생성된 ID 추가
         pythonRequest.put("title", complaintSubmitDto.getTitle());
-        pythonRequest.put("content", complaintSubmitDto.getBody());
+        pythonRequest.put("body", complaintSubmitDto.getBody());
+        pythonRequest.put("addressText", complaintSubmitDto.getAddressText());
+        pythonRequest.put("lat", complaintSubmitDto.getLat());
+        pythonRequest.put("lon", complaintSubmitDto.getLon());
+        pythonRequest.put("applicantId", applicantId);
+        pythonRequest.put("districtId", 3);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(pythonRequest, headers);
         try {

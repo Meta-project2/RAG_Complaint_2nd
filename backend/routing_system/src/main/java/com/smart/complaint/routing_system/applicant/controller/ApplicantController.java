@@ -148,7 +148,8 @@ public class ApplicantController {
             @RequestBody ComplaintSubmitDto complaintSubmitDto) {
 
         Long id = complaintService.receiveComplaint(applicantId, complaintSubmitDto);
-        complaintService.analyzeComplaint(id, complaintSubmitDto);
+        System.out.println(complaintSubmitDto.toString());
+        complaintService.analyzeComplaint(id, applicantId, complaintSubmitDto);
 
         return ResponseEntity.ok("전송이 완료되었습니다.");
     }

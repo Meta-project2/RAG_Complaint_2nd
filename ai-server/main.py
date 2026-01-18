@@ -39,46 +39,6 @@ app.add_middleware(
 async def root():
     return {"message": "서버 연결 성공 "}
 
-# Postman으로 보낼 데이터 구조 정의
-class ComplaintRequest(BaseModel):
-    title: str
-    body: str
-    district: str
-
-@app.post("/analyze")
-async def analyze_and_store(request: ComplaintRequest):
-    try:
-        print(f"[*] 분석 시작 - 민원 제목: {request.title}")
-
-        # 1. LLM 요약 및 분석 (Normalization)
-        # Ollama가 응답할 때까지 기다립니다.
-        body = request.title + "\n" + request.body
-        analysis = await llm_service.get_normalization(body)
-        print(f"[*] 정규화 완료: {analysis}...")
-
-        # 2. 벡터 추출 (Embedding)
-        # 전처리된 민원 원본을 바탕으로 1024차원 벡터 생성
-        embedding = await llm_service.get_embedding(analysis['preprocess_body'])
-        analysis['embedding'] = embedding
-        print(f"[*] 벡터화 완료 (차원: {len(embedding)})")
-
-        # 3. DB 저장 (is_current 처리 포함 트랜잭션)
-        # Python에서 PostgreSQL로 직접 저장
-        complaint_id = database.save_complaint(request.title, request.body, request.district)
-        database.save_normalization(complaint_id, analysis, embedding)
-        print(f"[+] 성공: 민원 {complaint_id} 데이터베이스 저장 완료")
-
-        return {
-            "status": "success", 
-            "complaint_id": complaint_id,
-            **analysis,
-        }
-
-    except Exception as e:
-        print(f"[!] 에러 발생: {str(e)}")
-        # 클라이언트에게 500 에러와 원인 반환
-        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
-
 # 요청 데이터 구조 정의
 class ChatRequest(BaseModel):
     query: str
@@ -116,16 +76,25 @@ async def chat_with_ai(complaint_id: int, request: ChatRequest):
 @app.post("/api/complaints/analyze")
 async def analyzeComplaints(title:str, body:str):
     api_key = 'sk-QoIqcyDiLSdNT-c7OBhfLV6WbkGNhVt1cdDuTzzrGyw'
-    url = "http://localhost:7860/api/v1/run/69747d4a-850e-4e7e-b914-57ae3d008b96"  # The complete API endpoint URL for this flow
+    url = "http://localhost:7860/api/v1/run/59369f82-0d62-414e-bd20-9bc5f9aa8a50"  # The complete API endpoint URL for this flow
+
+    print("Title: ", title)
+    print("Body: ", body)
 
     # Request payload configuration
     payload = {
         "output_type": "chat",
         "input_type": "text",
-        "input_value": "", # 기본값, 비워두기
+        # [수정] 최상위 input_value를 채워주면 RAG 검색 정확도가 올라갑니다
+        "input_value": f"TITLE: {title}\BODY: {body}", 
         "tweaks": {
-            "TextInput-제목": {"value": title},
-            "TextInput-본문": {"value": body}
+            # 찾으신 ID를 정확히 매핑합니다
+            "TextInput-MBAG3": {
+                "input_value": title
+            },
+            "TextInput-NNDwa": {
+                "input_value": body
+            }
         }
     }
     payload["session_id"] = str(uuid.uuid4())
@@ -138,14 +107,15 @@ async def analyzeComplaints(title:str, body:str):
         response.raise_for_status()  # Raise exception for bad status codes
 
         # Print response
-        print(response.text)
+        json_string_compact = json.dumps(response.text)
+        print("--- 기본 출력 ---")
+        print(json_string_compact)
 
     except requests.exceptions.RequestException as e:
         print(f"Error making API request: {e}")
     except ValueError as e:
         print(f"Error parsing response: {e}")
         
-
 
 # DB 설정 (사용자, 비밀번호, 호스트, DB이름 수정 필요)
 DATABASE_URL = "postgresql://postgres:sanghpw@localhost:5432/postgres"
@@ -189,12 +159,37 @@ Base.metadata.create_all(bind=engine)
 # --- 요청 데이터 모델 ---
 class ComplaintRequest(BaseModel):
     id: int # 민원 PK
-    title: str
-    content: str
+    title: str # 민원 제목
+    body: str # 민원 본문
+    addressText: str # 도로명 주소 (지도에서 변환된 값)
+    # SQL의 DECIMAL(10,7)과 매핑되도록 BigDecimal 사용 권장
+    lat: float # 위도
+    lon: float # 경도
+    # 추가로 필요한 정보들
+    applicantId: int # 민원인 ID (Long)
+    districtId: int # 발생 구역 ID (Long)
 
 def masking_by_ollama(text):
     if not text or text.strip() == "": return ""
-    prompt = f"[Identity] 당신은 보안 필터입니다... [Input] {text}" # 기존 프롬프트 사용
+    prompt = f"""
+    [Identity]
+    당신은 공공기관의 개인정보 보호 전문가입니다. 입력된 민원 본문에서 민원의 핵심 내용(현상, 위치의 성격, 요구사항)은 유지하되, 개인을 식별할 수 있는 정보만 아래 규칙에 따라 마스킹하세요.
+
+    [Masking Rules]
+    1. 이름: [성함]으로 변경 (예: 홍길동 -> [성함])
+    2. 전화번호: [연락처]로 변경 (예: 010-1234-5678 -> [연락처])
+    3. 상세 주소: 구체적인 번지수, 아파트 동/호수는 [상세주소]로 변경 (예: 성내로 25 101동 -> 성내로 [상세주소])
+    4. 주민등록번호/계좌번호: [개인식별번호]로 변경
+    5. 기타 이메일, 생년월일 등: [개인정보]로 변경
+
+    [Constraints]
+    - 민원의 주제(예: 가로등 고장, 불법 주정차, 소음 등)와 관련된 단어는 절대 수정하지 마세요.
+    - 인사말이나 감정 표현은 그대로 두되, 그 안의 개인정보만 가리세요.
+    - 출력은 마스킹이 완료된 본문만 출력하고, "알겠습니다" 등의 부연 설명은 하지 마세요.
+
+    [Input]
+    {text}
+    """ # 기존 프롬프트 사용
     try:
         payload = {"model": OLLAMA_MODEL, "prompt": prompt, "stream": False}
         response = requests.post(OLLAMA_URL, json=payload, timeout=40)
@@ -211,32 +206,55 @@ async def preprocess_complaint(req: ComplaintRequest, request: Request):
         
         safe_title = masking_by_ollama(req.title)
         if safe_title is None: return None
-        safe_content = masking_by_ollama(req.content)
+        safe_content = masking_by_ollama(req.body)
         if safe_content is None: return None
 
-        # 2. Gemini 구조화 분석 (테이블 컬럼에 맞춤)
-        prompt = f"""
-        당신은 대한민국 지자체 행정 데이터 분석 전문가입니다. 
-        반드시 모든 필드를 **한국어(Korean)**로만 작성하십시오. 절대 영어를 사용하지 마십시오.
-        
-        [분석 지침]
-        1. neutral_summary: 감정을 배제하고 상황을 객관적으로 한국어 1문장 요약.
-        2. core_request: 민원인이 요구하는 사항을 한국어로 명확히 기술.
-        3. core_cause: 문제의 원인을 한국어로 기술.
-        4. target_object: 민원의 주된 대상물 (한국어 단축 명사).
-        5. keywords: 검색용 핵심 한국어 단어 5개 배열.
-        6. location_hint: 본문에 언급된 장소를 한국어로 추출.
-        7. suggested_dept: 가장 적합한 한국어 부서 명칭.
+        api_key = 'sk-pCYh_S9cW_DoJLmXZVkXgqtdw4yGrU7OJAq6A73eS58'
+        url = "http://localhost:7860/api/v1/run/59369f82-0d62-414e-bd20-9bc5f9aa8a50"  # The complete API endpoint URL for this flow
 
-        민원 제목: {safe_title}
-        민원 내용: {safe_content}
-        """
+        for i in req:
+            print(i)
 
-        response = model.generate_content(prompt)
-        # JSON 문자열 추출 (Markdown 제거)
-        clean_json = re.sub(r'```json|```', '', response.text).strip()
-        analysis = json.loads(clean_json)
+        # Request payload configuration
+        payload = {
+            "output_type": "chat",
+            "input_type": "text",
+            "tweaks": {
+                # 찾으신 ID를 정확히 매핑합니다
+                "TextInput-MBAG3": {
+                    "input_value": safe_title
+                },
+                "TextInput-NNDwa": {
+                    "input_value": safe_content
+                }
+            }
+        }
+        payload["session_id"] = str(uuid.uuid4())
+        headers = {"x-api-key": api_key}
+
+        # Send API request
+        response = requests.request("POST", url, json=payload, headers=headers)
+        response.raise_for_status()
         
+        # 4. 결과 파싱 (Langflow 응답 구조에서 텍스트만 추출)
+        result_json = response.json()
+        ai_text = result_json['outputs'][0]['outputs'][0]['results']['message']['data']['text']
+        
+        print(f"AI 분석 완료: {ai_text}")
+        
+        # 성공 시 실제 AI 분석 결과를 반환
+        return {
+            "status": "success",
+            "data": ai_text
+        }
+    except Exception as e:
+        print(f"처리 중 오류 발생: {str(e)}")
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+        '''
         if isinstance(analysis, list):
             if len(analysis) > 0:
                 analysis = analysis[0]
@@ -279,7 +297,7 @@ async def preprocess_complaint(req: ComplaintRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         db.close()
-
+    '''
 # 직접 실행을 위한 블록 (python main.py로 실행 가능)
 if __name__ == "__main__":
     import uvicorn

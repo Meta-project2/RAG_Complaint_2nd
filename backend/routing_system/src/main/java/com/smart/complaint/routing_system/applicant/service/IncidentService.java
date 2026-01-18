@@ -38,6 +38,8 @@ public class IncidentService {
         List<Incident> subList = majorList.subList(start, end);
         return new PageImpl<>(subList, pageable, majorList.size());
     }
+
+    /*
     // [추가] 제목 변경 로직
     @Transactional
     public void updateTitle(Long incidentId, String newTitle) {
@@ -68,5 +70,6 @@ public class IncidentService {
         // 3. 대상 사건의 민원 수 증가
         targetIncident.setComplaintCount(targetIncident.getComplaintCount() + complaints.size());
     }
+    */
 
 }
