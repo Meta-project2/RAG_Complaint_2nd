@@ -3,10 +3,12 @@ package com.smart.complaint.routing_system.applicant.controller;
 import com.smart.complaint.routing_system.applicant.domain.IncidentStatus;
 import com.smart.complaint.routing_system.applicant.dto.IncidentDetailResponse;
 import com.smart.complaint.routing_system.applicant.dto.IncidentListResponse;
+import com.smart.complaint.routing_system.applicant.dto.IncidentRequestDto; // [추가] DTO import
 import com.smart.complaint.routing_system.applicant.entity.Complaint;
 import com.smart.complaint.routing_system.applicant.entity.Incident;
 import com.smart.complaint.routing_system.applicant.repository.ComplaintRepository;
 import com.smart.complaint.routing_system.applicant.repository.IncidentRepository;
+import com.smart.complaint.routing_system.applicant.service.IncidentService; // [추가] Service import
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,6 +33,7 @@ public class IncidentController {
 
     private final IncidentRepository incidentRepository;
     private final ComplaintRepository complaintRepository;
+    private final IncidentService incidentService; // [추가] 비즈니스 로직 처리를 위해 주입
 
     @Operation(summary = "사건 목록 조회")
     @GetMapping
@@ -45,13 +49,8 @@ public class IncidentController {
     @Operation(summary = "사건 상세 조회")
     @GetMapping("/{idStr}")
     public IncidentDetailResponse getIncidentDetail(@PathVariable String idStr) {
-        Long id;
-        try {
-            String[] parts = idStr.split("-");
-            id = Long.parseLong(parts[parts.length - 1]);
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID 형식이 잘못되었습니다.");
-        }
+        // [수정] ID 파싱 로직을 메소드로 분리하여 재사용
+        Long id = parseIncidentId(idStr);
 
         Incident incident = incidentRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "사건 없음"));
@@ -61,7 +60,6 @@ public class IncidentController {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        // [핵심 해결] 리스트를 변환하여 complaintDtos 변수에 담아줍니다.
         List<IncidentDetailResponse.IncidentComplaintDto> complaintDtos = complaints.stream()
                 .map(c -> IncidentDetailResponse.IncidentComplaintDto.builder()
                         .originalId(c.getId())
@@ -81,9 +79,52 @@ public class IncidentController {
                 .lastOccurred(incident.getClosedAt() != null ? incident.getClosedAt().format(formatter) : "-")
                 .complaintCount(incident.getComplaintCount() != null ? incident.getComplaintCount() : complaints.size())
                 .avgProcessTime(calculateAverageProcessTime(complaints))
-                .complaints(complaintDtos) // 이제 에러 없이 정상 참조됩니다.
+                .complaints(complaintDtos)
                 .build();
     }
+
+    // ==========================================
+    // [신규 기능 추가] 프론트엔드 요청 대응
+    // ==========================================
+
+    @Operation(summary = "사건 제목 수정")
+    @PatchMapping("/{idStr}")
+    public ResponseEntity<Void> updateTitle(
+            @PathVariable String idStr,
+            @RequestBody IncidentRequestDto.UpdateTitle request) {
+        Long id = parseIncidentId(idStr);
+        incidentService.updateIncidentTitle(id, request.getTitle());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "새 사건방 만들기 (민원 선택 생성)")
+    @PostMapping("/create-from-complaints")
+    public ResponseEntity<Void> createIncident(@RequestBody IncidentRequestDto.CreateRoom request) {
+        incidentService.createIncidentFromComplaints(request.getComplaintIds(), request.getTitle());
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "기존 사건으로 민원 이동")
+    @PutMapping("/move") // URL: /api/agent/incidents/move 로 매핑됨 (프론트엔드 호출 경로 확인 필요)
+    public ResponseEntity<Void> moveComplaints(@RequestBody IncidentRequestDto.MoveComplaint request) {
+        incidentService.moveComplaintsToExistingIncident(request.getComplaintIds(), request.getTargetIncidentId());
+        return ResponseEntity.ok().build();
+    }
+
+    // ==========================================
+    // Helper Methods
+    // ==========================================
+
+    private Long parseIncidentId(String idStr) {
+        try {
+            // "C2026-123" 형태 등에서 숫자만 추출하거나 마지막 부분 파싱
+            String[] parts = idStr.split("-");
+            return Long.parseLong(parts[parts.length - 1]);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID 형식이 잘못되었습니다.");
+        }
+    }
+
     private String calculateAverageProcessTime(List<Complaint> complaints) {
         if (complaints == null || complaints.isEmpty()) return "0분";
 
@@ -91,7 +132,6 @@ public class IncidentController {
         int count = 0;
 
         for (Complaint c : complaints) {
-            // 접수일(receivedAt)과 종결일(closedAt)이 모두 있을 때만 계산
             if (c.getReceivedAt() != null && c.getClosedAt() != null) {
                 java.time.Duration duration = java.time.Duration.between(c.getReceivedAt(), c.getClosedAt());
                 totalMinutes += duration.toMinutes();
@@ -102,37 +142,17 @@ public class IncidentController {
         if (count == 0) return "대기 중";
 
         long avgMinutes = totalMinutes / count;
-
-        // 단위 변환 로직 (분 -> 일, 시간, 분)
         long days = avgMinutes / (24 * 60);
         long remainingMinutesAfterDays = avgMinutes % (24 * 60);
         long hours = remainingMinutesAfterDays / 60;
 
-        // 문자열 조합
         StringBuilder sb = new StringBuilder();
+        if (days > 0) sb.append(days).append("일 ");
+        if (hours > 0) sb.append(hours).append("시간 ");
 
-        if (days > 0) {
-            sb.append(days).append("일 ");
-        }
-        if (hours > 0) {
-            sb.append(hours).append("시간 ");
-        }
+        // 시간 단위 이하일 경우 분 단위 표시 추가 (선택 사항)
+        if (days == 0 && hours == 0) sb.append(remainingMinutesAfterDays).append("분");
 
         return sb.toString().trim();
     }
-
-    // [추가 1] 제목 수정 기능
-    @PatchMapping("/{id}/title")
-    public void updateIncidentTitle(@PathVariable Long id, @RequestBody String newTitle) {
-        incidentService.updateTitle(id, newTitle);
-    }
-
-    // [추가 2] 민원 이동 기능 (A그룹 -> B그룹)
-    @PostMapping("/move")
-    public void moveComplaintsToIncident(
-            @RequestParam Long targetIncidentId,
-            @RequestBody List<Long> complaintIds) {
-        incidentService.moveComplaints(targetIncidentId, complaintIds);
-    }
-
 }
