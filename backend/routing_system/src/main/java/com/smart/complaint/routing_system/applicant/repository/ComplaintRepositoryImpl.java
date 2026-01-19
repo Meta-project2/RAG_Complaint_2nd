@@ -60,7 +60,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         @Override
         public Page<ComplaintResponse> search(Long departmentId, ComplaintSearchCondition condition) {
                 List<Tuple> results = queryFactory
-                                .select(complaint, normalization.neutralSummary, user.displayName)
+                                .select(complaint, normalization.neutralSummary,normalization.coreRequest, user.displayName)
                                 .from(complaint)
                                 .leftJoin(normalization).on(normalization.complaint.eq(complaint))
                                 .leftJoin(user).on(complaint.answeredBy.eq(user.id))
@@ -78,11 +78,13 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                 .map(tuple -> {
                                         Complaint c = tuple.get(complaint);
                                         String summary = tuple.get(normalization.neutralSummary);
+                                        String coreRequest = tuple.get(normalization.coreRequest);
                                         String managerName = tuple.get(user.displayName);
 
                                         ComplaintResponse dto = new ComplaintResponse(c);
                                         dto.setNeutralSummary(summary);
                                         dto.setManagerName(managerName);
+                                        dto.setCoreRequest(coreRequest);
                                         return dto;
                                 })
                                 .filter(java.util.Objects::nonNull)
@@ -402,31 +404,48 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         // 3. 부서별 현황 (핵심: 동적 그룹핑)
         @Override
         public List<DeptStatusDto> getDeptStatusStats(LocalDateTime start, LocalDateTime end, Long deptId) {
-                QDepartment dept = QDepartment.department;
-                QDepartment parentDept = new QDepartment("parentDept"); // 상위 부서(국) 조인용
+                QDepartment d = QDepartment.department;
+                QComplaint c = QComplaint.complaint;
 
-                // 동적 그룹핑 대상 결정
-                // deptId가 없으면(전체) -> 국(Parent) 기준 그룹핑
-                // deptId가 있으면(특정 국) -> 과(Dept) 기준 그룹핑
-                var groupTarget = (deptId == null) ? parentDept.name : dept.name;
-
-                return queryFactory
-                        .select(Projections.constructor(DeptStatusDto.class,
-                                groupTarget, // 동적 그룹핑 컬럼
-                                complaint.count(),
-                                new CaseBuilder()
-                                        .when(complaint.status.notIn(ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED))
-                                        .then(1L).otherwise(0L)
-                                        .sum().coalesce(0L)
-                        ))
-                        .from(complaint)
-                        .join(dept).on(complaint.currentDepartmentId.eq(dept.id)) // 과 조인
-                        .leftJoin(dept.parent, parentDept) // 국 조인 (계층 구조)
-                        .where(complaint.receivedAt.between(start, end)
-                                .and(deptIdEq(deptId, dept))) // 필터 조건
-                        .groupBy(groupTarget)
-                        .orderBy(complaint.count().desc())
-                        .fetch();
+                if (deptId == null) {
+                        // [전체 보기] 모든 '국(GUK)' 기준 (하위 과들의 민원 합산)
+                        QDepartment subDept = new QDepartment("subDept");
+                        return queryFactory
+                                .select(Projections.constructor(DeptStatusDto.class,
+                                        d.name,
+                                        c.count().coalesce(0L), // 민원 없어도 0으로 표시
+                                        new CaseBuilder()
+                                                .when(c.status.notIn(ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED))
+                                                .then(1L).otherwise(0L)
+                                                .sum().coalesce(0L)
+                                ))
+                                .from(d)
+                                .leftJoin(subDept).on(subDept.parent.id.eq(d.id)) // 국 하위의 과들 조인
+                                .leftJoin(c).on(c.currentDepartmentId.eq(subDept.id)
+                                        .and(c.receivedAt.between(start, end))) // 기간 내 민원 조인
+                                .where(d.category.eq("GUK").and(d.isActive.isTrue()))
+                                .groupBy(d.id, d.name)
+                                .orderBy(c.count().desc())
+                                .fetch();
+                } else {
+                        // [국 선택] 해당 국 하위의 모든 '과(GWA)' 리스트 (0건 포함)
+                        return queryFactory
+                                .select(Projections.constructor(DeptStatusDto.class,
+                                        d.name,
+                                        c.count().coalesce(0L),
+                                        new CaseBuilder()
+                                                .when(c.status.notIn(ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED))
+                                                .then(1L).otherwise(0L)
+                                                .sum().coalesce(0L)
+                                ))
+                                .from(d)
+                                .leftJoin(c).on(c.currentDepartmentId.eq(d.id)
+                                        .and(c.receivedAt.between(start, end)))
+                                .where(d.parent.id.eq(deptId).and(d.isActive.isTrue()))
+                                .groupBy(d.id, d.name)
+                                .orderBy(c.count().desc())
+                                .fetch();
+                }
         }
 
         // [Helper] 부서 필터 조건 생성

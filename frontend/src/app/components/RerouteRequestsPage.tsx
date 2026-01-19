@@ -210,7 +210,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
         {/* Header Area */}
         <div className="h-16 border-b border-border bg-card px-6 shadow-sm flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">재이관 요청함</h1>
+            <h1 className="text-2xl font-bold text-slate-900">이관 요청함</h1>
             <p className="text-sm text-slate-400 font-medium pt-1">부서 간 민원 이관 승인/반려 관리</p>
           </div>
         </div>
@@ -407,7 +407,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
       {selectedRequest && (
         <div className="fixed right-0 top-0 h-screen w-96 bg-white border-l border-slate-200 shadow-2xl z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
           <div className="px-5 h-16 border-b border-border flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur z-10">
-            <h3 className="text-base font-bold text-slate-800">재이관 검토</h3>
+            <h3 className="text-base font-bold text-slate-800">이관 검토</h3>
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-slate-100" onClick={() => setSelectedRequest(null)}>
               <X className="h-4 w-4 text-slate-500" />
             </Button>
@@ -522,7 +522,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
       <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>재이관 승인 확인</DialogTitle>
+            <DialogTitle>이관 승인 확인</DialogTitle>
             <DialogDescription>승인 시 민원이 즉시 <b>{selectedRequest?.targetDeptName}</b>로 이관됩니다.</DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-3">
@@ -543,7 +543,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
       <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-600">재이관 반려</DialogTitle>
+            <DialogTitle className="text-red-600">이관 반려</DialogTitle>
             <DialogDescription>반려 사유를 입력하세요. 요청자에게 전달됩니다.</DialogDescription>
           </DialogHeader>
           <div className="py-4">

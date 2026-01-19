@@ -30,13 +30,14 @@ public class ComplaintController {
     @Operation(summary = "민원 리스트 조회", description = "로그인한 사용자의 부서에 배정된 민원 리스트를 전부 조회합니다.")
     @GetMapping
     public Page<ComplaintResponse> getComplaints(
-            @ModelAttribute ComplaintSearchCondition condition
+            @ModelAttribute ComplaintSearchCondition condition, HttpServletRequest request
     // @AuthenticationPrincipal UserDetails userDetails
     ) {
         // 로그인한 사람이 '3번 부서' 소속이라고 가정
         // 나중에는 userDetails에서 진짜 부서 ID
         Long myDepartmentId = 11L;
-
+        User user = getSessionUser(request);
+        myDepartmentId = user.getDepartment().getId();
 
         return complaintRepository.search(myDepartmentId, condition);
     }

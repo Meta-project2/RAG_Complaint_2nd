@@ -209,7 +209,8 @@ function AppContent() {
             }
             onNavigate={handleNavigate}
             userRole={userRole}
-            userName={userName}     
+            userName={userName}
+            departmentName={departmentName}     
             onLogout={handleLogout}
           >
             {currentPage.type === 'complaints' && (

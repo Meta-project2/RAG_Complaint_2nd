@@ -281,7 +281,16 @@ export function AdminDashboard() {
                     <linearGradient id="barRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f87171" /><stop offset="100%" stopColor="#ef4444" /></linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="deptName" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis 
+  dataKey="deptName" 
+  tick={{ fontSize: 10, fill: '#64748b' }} // 글씨 크기를 약간 줄임
+  axisLine={false} 
+  tickLine={false}
+  interval={0}        // 모든 과 이름을 강제로 표시
+  angle={-35}         // 대각선으로 기울임
+  textAnchor="end"    // 기울어진 글씨의 끝을 축에 맞춤
+  height={60}         // 라벨이 기울어지면서 아래쪽 공간이 더 필요하므로 높이 조절
+/>
                   <YAxis tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
                   <Tooltip cursor={{ fill: '#f1f5f9' }} />
                   <Bar dataKey="received" name="접수" fill="url(#barBlue)" radius={[4, 4, 0, 0]} />

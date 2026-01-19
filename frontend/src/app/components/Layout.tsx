@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Badge } from './ui/badge';
+import minwonIcon from "@/lib/minwon1.png"; 
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -28,7 +29,7 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
   const agentMenuItems = [
     { id: 'complaints', label: '민원함', icon: FileText },
     { id: 'incidents', label: '중복 민원', icon: Layers },
-    { id: 'reroute-requests', label: '재이관 요청함', icon: RotateCcw },
+    { id: 'reroute-requests', label: '이관 요청함', icon: RotateCcw },
     { id: 'dashboard', label: '민원 처리 통계', icon: ChartNoAxesCombined },
     { id: 'complaintmap', label: '민원 지도', icon: Map },
     { id: 'civil-service', label: '민원인 사이트', icon: Globe },
@@ -40,7 +41,7 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
   const adminMenuItems = [
     { id: 'complaints', label: '민원함', icon: FileText },
     { id: 'incidents', label: '중복 민원', icon: Layers },
-    { id: 'reroute-requests', label: '재이관 요청함', icon: RotateCcw },
+    { id: 'reroute-requests', label: '이관 요청함', icon: RotateCcw },
     { id: 'dashboard', label: '민원 처리 통계', icon: ChartNoAxesCombined },
     // { id: 'user-management', label: '사용자/부서 관리', icon: User },
     { id: 'civil-service', label: '민원인 서비스', icon: Globe },
@@ -66,10 +67,8 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
         <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded bg-primary flex items-center justify-center">
-                <FileText className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="text-sidebar-foreground">민원 시스템</span>
+              <img src={minwonIcon} alt="파일" className="h-10 w-10" />
+              {/* <span className="text-sidebar-foreground">민원시스템</span> */}
             </div>
           )}
           <Button
@@ -119,12 +118,12 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
                     <div className="flex flex-col items-start text-left overflow-hidden">
                         {/* [★수정] 실제 이름 표시 */}
                         <span className="text-sm truncate w-full">{userName}</span> 
-                        <Badge variant="secondary" className="text-[10px] h-4 px-1 mt-0.5">
-                        {userRole === 'agent' ? '기획 예산과' : '관리자'}
-                        </Badge>
-                        {/* <span className="text-xs text-muted-foreground truncate w-full">
-                          {departmentName || '소속 없음'}
-                        </span> */}
+                        {/* <Badge variant="secondary" className="text-[10px] h-4 px-1 mt-0.5">
+                        {userRole === 'agent' ? '처리 담당자' : '관리자'}
+                        </Badge> */}
+                        <span className="text-xs text-muted-foreground truncate w-full">
+                          <Badge variant="secondary" className="text-[10px] h-4 px-1 mt-0.5">{departmentName || '소속 없음'}</Badge>
+                        </span>
                     </div>
                   )}
                 </Button>

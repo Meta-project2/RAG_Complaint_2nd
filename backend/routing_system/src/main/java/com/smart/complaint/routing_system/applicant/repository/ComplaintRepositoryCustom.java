@@ -28,8 +28,6 @@ public interface ComplaintRepositoryCustom {
 
     List<ComplaintHeatMap> getAllComplaintsWithLatLon();
 
-    List<ComplaintHeatMap> getAllComplaintsWithLatLon(Long id);
-
     // 대시보드용 메서드
     // 1. 민원 접수 추이
     List<DailyCountDto> getDailyTrends(LocalDateTime start, LocalDateTime end, Long deptId);

@@ -33,9 +33,9 @@ const DEPARTMENTS = [
 const statusMap: Record<string, { label: string; color: string }> = {
   RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-800' },
   NORMALIZED: { label: '정규화', color: 'bg-purple-100 text-purple-800' },
-  RECOMMENDED: { label: '재이관 요청', color: 'bg-cyan-100 text-cyan-800' },
+  RECOMMENDED: { label: '이관 요청', color: 'bg-cyan-100 text-cyan-800' },
   IN_PROGRESS: { label: '처리중', color: 'bg-yellow-100 text-yellow-800' },
-  RESOLVED: { label: '처리완료', color: 'bg-green-100 text-green-800' },
+  RESOLVED: { label: '답변완료', color: 'bg-green-100 text-green-800' },
   CLOSED: { label: '종결', color: 'bg-green-100 text-green-800' },
 };
 
@@ -240,7 +240,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
             {isMine && !isSelectedClosed && complaint.status !== 'RECOMMENDED' && (
               <>
                 <Button variant="outline" onClick={() => setShowRerouteDialog(true)}>
-                  <RefreshCw className="w-4 h-4 mr-2" /> 재이관 요청
+                  <RefreshCw className="w-4 h-4 mr-2" /> 이관 요청
                 </Button>
                 <Button variant="ghost" onClick={handleRelease} className="text-red-600 hover:bg-red-50">
                   <UserMinus className="w-4 h-4 mr-2" /> 담당 취소

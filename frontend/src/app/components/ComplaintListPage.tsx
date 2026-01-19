@@ -33,9 +33,9 @@ interface ComplaintListPageProps {
 const statusMap: Record<string, { label: string; color: string }> = {
   RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-800' },
   NORMALIZED: { label: '정규화', color: 'bg-purple-100 text-purple-800' },
-  RECOMMENDED: { label: '재이관 요청', color: 'bg-cyan-100 text-cyan-800' },
+  RECOMMENDED: { label: '이관 요청', color: 'bg-cyan-100 text-cyan-800' },
   IN_PROGRESS: { label: '처리중', color: 'bg-yellow-100 text-yellow-800' },
-  RESOLVED: { label: '처리완료', color: 'bg-green-100 text-green-800' },
+  RESOLVED: { label: '답변완료', color: 'bg-green-100 text-green-800' },
   CLOSED: { label: '종결', color: 'bg-green-100 text-green-800' },
 };
 
@@ -89,13 +89,10 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
 
       const data: any = await AgentComplaintApi.getAll(params);
 
-<<<<<<< HEAD
       console.log("받아온 데이터 타입:", typeof data);
       console.log("받아온 데이터 구조:", data);
       console.log("content는 배열인가?:", Array.isArray(data?.content));
       
-=======
->>>>>>> d624cf004203b37948ba08108fab49fad3530f84
       if (data && Array.isArray(data.content)) {
         setComplaints(data.content);
         setTotalPages(data.totalPages);
@@ -456,8 +453,8 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 px-4 !pb-3 text-sm text-slate-700 leading-relaxed bg-white/50">
-                {selectedComplaintData.neutralSummary ? (
-                  selectedComplaintData.neutralSummary
+                {selectedComplaintData.coreRequest ? (
+                  selectedComplaintData.coreRequest
                 ) : (
                   <span className="text-slate-400">요약 내용이 없습니다.</span>
                 )}

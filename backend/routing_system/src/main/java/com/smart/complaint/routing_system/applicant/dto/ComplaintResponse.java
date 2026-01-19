@@ -19,6 +19,8 @@ public class ComplaintResponse {
 
     private String neutralSummary; // 민원 내용 요약(LLM)
 
+    private String coreRequest;
+
     private String managerName;
 
     // Entity -> DTO 변환 생성자
