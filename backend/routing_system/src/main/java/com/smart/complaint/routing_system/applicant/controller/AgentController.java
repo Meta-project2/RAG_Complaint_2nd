@@ -53,6 +53,8 @@ public class AgentController {
         response.put("username", user.getUsername());
         response.put("displayName", user.getDisplayName());
         response.put("role", user.getRole());
+        String deptName = (user.getDepartment() != null) ? user.getDepartment().getName() : "소속 없음";
+        response.put("departmentName", deptName);
 
         return ResponseEntity.ok(response);
     }
@@ -108,6 +110,9 @@ public class AgentController {
         responseBody.put("username", user.getUsername());
         responseBody.put("role", user.getRole());
 
+        String deptName = (user.getDepartment() != null) ? user.getDepartment().getName() : "소속 없음";
+        responseBody.put("departmentName", deptName);
+        
         // 예: { "message": "로그인 성공", "username": "admin1", "role": "ADMIN" }
         return ResponseEntity.ok(responseBody);
     }

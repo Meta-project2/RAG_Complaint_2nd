@@ -52,6 +52,7 @@ function AppContent() {
 
   const [userRole, setUserRole] = useState<'agent' | 'admin' | null>(null);
   const [userName, setUserName] = useState<string>('');
+  const [departmentName, setDepartmentName] = useState<string>(''); // [추가] 부서명 상태
   const [currentPage, setCurrentPage] = useState<Page>({ type: 'login' });
   const [isLoading, setIsLoading] = useState(true); // 로딩 상태 추가 (깜빡임 방지)
 
@@ -69,11 +70,13 @@ function AppContent() {
           // (Typescript 에러가 난다면 any로 감싸거나 DTO를 수정해야 함)
           const serverRole = (userData as any).role;
           const serverName = (userData as any).displayName; 
+          const serverDept = (userData as any).departmentName;
 
           if (serverRole) {
              const roleLower = serverRole.toLowerCase() as 'agent' | 'admin';
              setUserRole(roleLower);
              setUserName(serverName || '알 수 없음');
+             setDepartmentName(serverDept || '소속 없음'); // [추가] 부서명 설정
              
              // 3. 로그인 페이지에 있었다면 대시보드나 목록으로 이동
              if (currentPage.type === 'login') {
@@ -185,7 +188,10 @@ function AppContent() {
              // 로그인 성공 시 로직도 업데이트(이름을 로그인 응답에서 받거나, getMe를 다시 호출)
              setUserRole(role);
              // 임시로 일단 getMe를 다시 호출해서 이름을 채움
-             AgentComplaintApi.getMe().then(u => setUserName((u as any).displayName));
+             AgentComplaintApi.getMe().then(u => {
+         setUserName((u as any).displayName);
+         setDepartmentName((u as any).departmentName); // [추가]
+       });
              
              if(role === 'admin') setCurrentPage({type:'dashboard'});
              else setCurrentPage({type:'complaints'});

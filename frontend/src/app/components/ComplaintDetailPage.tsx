@@ -26,8 +26,8 @@ interface ComplaintDetailPageProps {
 }
 
 const DEPARTMENTS = [
-  { id: 3, name: '교통행정과' },
-  { id: 4, name: '교통안전과' },
+  { id: 12, name: '일자리정책과' },
+  { id: 13, name: '지역경제과' },
 ];
 
 const statusMap: Record<string, { label: string; color: string }> = {
@@ -314,16 +314,16 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                   value="incident"
                   className="flex-none data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-none font-normal data-[state=active]:font-bold rounded-lg transition-all px-4"
                 >
-                  사건(군집)
+                  중복 민원
                 </TabsTrigger>
-
+{/* 
                 <TabsTrigger
                   value="knowledge"
                   className="flex-none data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-none font-normal data-[state=active]:font-bold rounded-lg transition-all px-4"
                 >
                   <Sparkles className="h-4 w-4 mr-1" />
                   지식·사례 검색
-                </TabsTrigger>
+                </TabsTrigger> */}
 
               </TabsList>
 

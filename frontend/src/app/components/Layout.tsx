@@ -18,10 +18,11 @@ interface LayoutProps {
   onNavigate: (page: string) => void;
   userRole: 'agent' | 'admin';
   userName: string;  
+  departmentName?: string;
   onLogout: () => void;
 }
 
-export function Layout({ children, currentPage, onNavigate, userRole, userName, onLogout }: LayoutProps) {
+export function Layout({ children, currentPage, onNavigate, userRole, userName, departmentName ,onLogout }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const agentMenuItems = [
@@ -39,9 +40,9 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
   const adminMenuItems = [
     { id: 'complaints', label: '민원함', icon: FileText },
     { id: 'incidents', label: '중복 민원', icon: Layers },
-    { id: 'reroute-requests', label: '재이관 요청함', icon: FileText },
-    { id: 'dashboard', label: '민원 처리 통계', icon: Layers },
-    { id: 'user-management', label: '사용자/부서 관리', icon: User },
+    { id: 'reroute-requests', label: '재이관 요청함', icon: RotateCcw },
+    { id: 'dashboard', label: '민원 처리 통계', icon: ChartNoAxesCombined },
+    // { id: 'user-management', label: '사용자/부서 관리', icon: User },
     { id: 'civil-service', label: '민원인 서비스', icon: Globe },
     // { id: 'knowledge-base', label: '지식베이스', icon: FileText },
     // { id: 'settings', label: '설정', icon: Settings },
@@ -86,7 +87,7 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
         </div>
 
         {/* Sidebar Menu */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-2 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
@@ -95,9 +96,9 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
               <button
                 key={item.id}
                 onClick={() => isCivilService ? handleMoveToCivilService() : onNavigate(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded transition-colors ${
                   isActive
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    ? 'bg-primary text-primary-foreground'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                 }`}
               >
@@ -119,8 +120,11 @@ export function Layout({ children, currentPage, onNavigate, userRole, userName, 
                         {/* [★수정] 실제 이름 표시 */}
                         <span className="text-sm truncate w-full">{userName}</span> 
                         <Badge variant="secondary" className="text-[10px] h-4 px-1 mt-0.5">
-                        {userRole === 'agent' ? '처리 담당자' : '운영 관리자'}
+                        {userRole === 'agent' ? '기획 예산과' : '관리자'}
                         </Badge>
+                        {/* <span className="text-xs text-muted-foreground truncate w-full">
+                          {departmentName || '소속 없음'}
+                        </span> */}
                     </div>
                   )}
                 </Button>

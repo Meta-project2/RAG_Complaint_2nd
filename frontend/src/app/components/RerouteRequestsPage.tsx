@@ -211,6 +211,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
         <div className="h-16 border-b border-border bg-card px-6 shadow-sm flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900">재이관 요청함</h1>
+            <p className="text-sm text-slate-400 font-medium pt-1">부서 간 민원 이관 승인/반려 관리</p>
           </div>
         </div>
 
@@ -225,7 +226,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="pl-9 bg-input-background pr-8"
+                  className="pl-9 bg-input-background pr-8 w-105"
                 />
                 {searchQuery && (
                   <button
@@ -273,7 +274,7 @@ export function RerouteRequestsPage({ userRole }: RerouteRequestsPageProps) {
               </Select>
 
               <Button variant="ghost" size="sm" onClick={resetFilters} className="ml-auto text-muted-foreground">
-                <X className="h-4 w-4 mr-1" /> 초기화
+                <X className="h-4 w-4 mr-1" /> 필터 초기화
               </Button>
             </div>
             

@@ -154,7 +154,7 @@ export function AdminDashboard() {
         <h1 className="text-2.5xl font-bold text-slate-900">민원 처리 현황</h1>
         <div className="flex flex-wrap gap-2 items-center ml-auto">
           <Select value={period} onValueChange={handlePeriodChange}>
-            <SelectTrigger className="w-32"><SelectValue placeholder="기간 선택" /></SelectTrigger>
+            <SelectTrigger className="w-32 bg-input-background"><SelectValue placeholder="기간 선택" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="1d">오늘</SelectItem><SelectItem value="7d">최근 7일</SelectItem><SelectItem value="30d">최근 30일</SelectItem><SelectItem value="custom">직접 선택</SelectItem>
             </SelectContent>
@@ -207,7 +207,7 @@ export function AdminDashboard() {
               <DeptFilterSelect value={timeFilter} onChange={setTimeFilter} />
             </CardHeader>
             <CardContent className="px-1 py-0">
-              <div className="flex h-[220px] items-center justify-center">
+              <div className="flex h-[180px] items-center justify-center">
                 <div className="w-[60%] h-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -254,7 +254,7 @@ export function AdminDashboard() {
           <Card className="col-span-1 shadow-sm">
             <CardHeader className="flex flex-row items-center">
               <div className="h-4 w-1 bg-purple-600 rounded-full mr-2" />
-              <CardTitle className="text-base font-bold">AI 배정 정확도</CardTitle>
+              <CardTitle className="text-base font-bold">AI 자동 배정 정확도</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[180px] w-full flex items-center justify-center">
