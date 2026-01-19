@@ -157,4 +157,8 @@ public class Complaint {
         // incidentLinkScore는 파이썬(AI) 재계산 전까지는 유지하거나 null 처리
     }
 
+    public void newInquiry() {
+        this.status = ComplaintStatus.IN_PROGRESS;
+    }
+
 }

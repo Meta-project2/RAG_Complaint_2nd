@@ -89,13 +89,10 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
 
       const data: any = await AgentComplaintApi.getAll(params);
 
-<<<<<<< HEAD
       console.log("받아온 데이터 타입:", typeof data);
       console.log("받아온 데이터 구조:", data);
       console.log("content는 배열인가?:", Array.isArray(data?.content));
       
-=======
->>>>>>> d624cf004203b37948ba08108fab49fad3530f84
       if (data && Array.isArray(data.content)) {
         setComplaints(data.content);
         setTotalPages(data.totalPages);

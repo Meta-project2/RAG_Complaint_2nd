@@ -6,7 +6,9 @@ import com.smart.complaint.routing_system.applicant.domain.ErrorMessage;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintAnswerRequest;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintInquiryDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintRerouteRequest;
+import com.smart.complaint.routing_system.applicant.dto.ComplaintStatDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSubmitDto;
+import com.smart.complaint.routing_system.applicant.dto.KeywordsDto;
 import com.smart.complaint.routing_system.applicant.entity.ChildComplaint;
 import com.smart.complaint.routing_system.applicant.entity.Complaint;
 import com.smart.complaint.routing_system.applicant.entity.ComplaintReroute;
@@ -248,6 +250,9 @@ public class ComplaintService {
                         .status(ComplaintStatus.RECEIVED)
                         .build();
 
+                // 부모 민원의 상태 변화 -> IN_PROGRESS로
+                parent.newInquiry();
+                complaintRepository.save(parent);
                 childComplaintRepository.save(child);
 
             } catch (Exception e) {
@@ -256,6 +261,27 @@ public class ComplaintService {
             }
         } catch (Exception e) {
             log.error("새 문의 저장 중 문제 발생: {}", e.getMessage());
+        }
+    }
+
+    public ComplaintStatDto calculateStat() {
+        ComplaintStatDto statDto = null;
+        try{
+            statDto = complaintRepository.geComplaintStatus();
+        } catch (Exception e) {
+            log.error("통계 분석 중 문제 발생: {}", e.getMessage());
+            throw new BusinessException(ErrorMessage.DATABASE_ERROR);
+        }
+        return statDto;
+    }
+
+    public List<KeywordsDto> calculateKeywords() {
+        try {
+            List<KeywordsDto> keywordsDtos = complaintRepository.calculateKeywords();
+            return keywordsDtos;
+        } catch (Exception e) {
+            log.error("키워드 계산 중 문제 발생: {}", e.getMessage());
+            throw new BusinessException(ErrorMessage.DATABASE_ERROR);
         }
     }
 }

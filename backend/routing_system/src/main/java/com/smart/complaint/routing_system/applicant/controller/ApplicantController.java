@@ -5,7 +5,9 @@ import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintHeatMap;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintInquiryDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintListDto;
+import com.smart.complaint.routing_system.applicant.dto.ComplaintStatDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintSubmitDto;
+import com.smart.complaint.routing_system.applicant.dto.KeywordsDto;
 import com.smart.complaint.routing_system.applicant.dto.UserCheckDto;
 import com.smart.complaint.routing_system.applicant.dto.UserLoginRequest;
 import com.smart.complaint.routing_system.applicant.dto.UserSignUpDto;
@@ -29,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 // 민원인 컨트롤러
 @Tag(name = "민원인 컨트롤러", description = "민원인용 민원 관리 API")
@@ -145,6 +149,7 @@ public class ApplicantController {
         return ResponseEntity.ok(complaints);
     }
 
+    // 새로운 민원 생성
     @PostMapping("/api/applicant/complaint")
     public ResponseEntity<String> submitComplaint(@AuthenticationPrincipal String applicantId,
             @RequestBody ComplaintSubmitDto complaintSubmitDto) {
@@ -155,6 +160,7 @@ public class ApplicantController {
         return ResponseEntity.ok("전송이 완료되었습니다.");
     }
 
+    // 추가 민원 생성
     @PostMapping("/api/applicant/complaints/{id}/comments")
     public ResponseEntity<String> postMethodName(@PathVariable Long id, @RequestBody ComplaintInquiryDto inquiryDto) {
 
@@ -162,6 +168,25 @@ public class ApplicantController {
 
         return ResponseEntity.ok("");
     }
+
+    // 민원 통계 데이터
+    @GetMapping("/api/applicant/complaints-stat")
+    public ResponseEntity<ComplaintStatDto> calculateStat() {
+
+        ComplaintStatDto statDtos = complaintService.calculateStat();
+
+        return ResponseEntity.ok(statDtos);
+    }
+
+    @GetMapping("/api/applicant/complaints-keyword")
+    public ResponseEntity<List<KeywordsDto>> getKeywords() {
+
+        List<KeywordsDto> keywordsDto = complaintService.calculateKeywords();
+
+        return ResponseEntity.ok(keywordsDto);
+    }
+    
+    
 
     /*
      * @PostMapping("/api/applicant/complaints")
