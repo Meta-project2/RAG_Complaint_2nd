@@ -89,6 +89,7 @@ export function ApplicantComplaintForm({ onGoHome, onViewComplaints, onPreview }
             timerInterval = setInterval(() => {
               i = (i + 1) % messages.length;
               Swal.update({ title: messages[i] });
+              showConfirmButton: false;
             }, 5000);
           },
           willClose: () => clearInterval(timerInterval)

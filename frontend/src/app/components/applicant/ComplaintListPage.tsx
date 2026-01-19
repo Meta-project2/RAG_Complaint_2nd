@@ -258,7 +258,7 @@ export default function PastComplaintsPage() {
               {/* 조회 버튼 - 이미지 참고 (회색 계열 디자인) */}
               <Button
                 onClick={handleSearch}
-                className="bg-gray-700 hover:bg-gray-800 text-white h-10 px-6 font-bold text-sm flex items-center gap-2 rounded-lg"
+                className="bg-blue-700 hover:bg-blue-800 text-white h-10 px-6 font-bold text-sm flex items-center gap-2 rounded-lg"
               >
                 조회 <Search className="w-4 h-4" />
               </Button>
@@ -269,7 +269,7 @@ export default function PastComplaintsPage() {
                 onClick={() => { setSearchKeyword(''); setStartDate(''); setEndDate(''); setSortBy('date-desc'); setSearchTrigger(0); }}
                 className="h-10 px-3 text-gray-400 hover:text-gray-600"
               >
-                <RefreshCcw className="w-4 h-4" />
+                <RefreshCcw className="w-4 h-4" />필터초기화
               </Button>
             </div>
           </div>
@@ -297,45 +297,21 @@ export default function PastComplaintsPage() {
 
           {/* Results Summary */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="bg-gray-100 px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <p className="text-gray-700 text-base">
-                  총 <span className="font-bold text-lg">{filteredAndSortedComplaints.length}</span>건의 민원
-                  {filteredAndSortedComplaints.length !== complaints.length && (
-                    <span className="text-gray-500 text-sm ml-2">
-                      (전체 {complaints.length}건 중)
-                    </span>
-                  )}
-                </p>
-                {totalPages > 0 && (
-                  <p className="text-gray-600 text-sm">
-                    {currentPage} / {totalPages} 페이지
-                  </p>
-                )}
-              </div>
-            </div>
-
             {/* 컬럼 헤더 영역 - 리스트와 열을 맞춤 */}
             {currentComplaints.length > 0 && (
               <div className="px-6 py-3 bg-gray-100 border-b border-gray-200 flex items-center gap-6 text-xs font-bold text-gray-600 uppercase tracking-tight">
                 {/* 1. 번호 컬럼 */}
                 <div className="w-16 shrink-0 text-center">번호</div>
-
                 {/* 세로 구분선 */}
                 <div className="h-3 w-[1px] bg-gray-300 shrink-0" />
-
                 {/* 2. 제목 컬럼 */}
                 <div className="flex-1 px-2">민원 제목 및 상세 내용</div>
-
                 {/* 세로 구분선 (데스크탑에서만 표시) */}
                 <div className="hidden md:block h-3 w-[1px] bg-gray-300 shrink-0" />
-
                 {/* 3. 부서/날짜 컬럼 */}
                 <div className="hidden md:block min-w-[120px] text-center">담당부서 / 접수일</div>
-
                 {/* 세로 구분선 */}
                 <div className="h-3 w-[1px] bg-gray-300 shrink-0" />
-
                 {/* 4. 진행 상태 컬럼 */}
                 <div className="min-w-[100px] text-center">진행 상태</div>
               </div>
@@ -386,7 +362,7 @@ export default function PastComplaintsPage() {
                       <Button
                         onClick={() => handleViewDetail(complaint.id)}
                         size="sm"
-                        className="bg-gray-900 hover:bg-gray-800 text-white h-7 w-full text-[11px] py-0"
+                        className="bg-blue-900 hover:bg-blue-800 text-white h-7 w-full text-[11px] py-0"
                       >
                         상세보기
                       </Button>
