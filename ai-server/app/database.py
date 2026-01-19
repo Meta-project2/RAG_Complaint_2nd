@@ -1,3 +1,4 @@
+from fastapi import FastAPI
 import psycopg2
 from psycopg2.extras import Json
 import os
@@ -6,13 +7,23 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+app = FastAPI(title="Complaint Analyzer AI")
+
 # DB 연결 정보 (환경 변수 또는 .env 활용 권장)
 DB_CONFIG = {
-    "dbname": "postgres",
+<<<<<<< HEAD
+    "dbname": "complaint_db",
     "user": "myuser",
-    "password": os.getenv("POSTGRES_PASSWORD"),
+    "password": os.getenv("0000"),
     "host": "localhost",
     "port": 5432
+=======
+    "dbname": os.getenv("POSTGRES_DB", "postgres"),
+    "user": os.getenv("POSTGRES_USER", "postgres"),
+    "password": os.getenv("POSTGRES_PASSWORD", "0000"),
+    "host": os.getenv("DB_HOST", "db"), # 기본값을 db로 설정
+    "port": int(os.getenv("DB_PORT", 5432))
+>>>>>>> d624cf004203b37948ba08108fab49fad3530f84
 }
 
 def get_db_connection():
@@ -58,8 +69,6 @@ def save_normalization(complaint_id, analysis, embedding):
     cur = conn.cursor()
     
     try:
-        
-
         cur.execute("""
             INSERT INTO complaint_normalizations (
                 complaint_id, 
