@@ -626,7 +626,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
 
                 List<Object[]> chartResults = entityManager.createNativeQuery(chartSql).getResultList();
                 List<CategoryAvgDto> responseTimeData = chartResults.stream()
-                                .map(row -> new CategoryAvgDto((String) row[0], ((Number) row[1]).doubleValue()))
+                                .map(row -> new CategoryAvgDto(((String) row[0]).replace("과", ""), ((Number) row[1]).doubleValue()))
                                 .collect(Collectors.toList());
 
                 return new ComplaintStatDto(totalAvg, responseTimeData, fastestDept, improvementRate);
