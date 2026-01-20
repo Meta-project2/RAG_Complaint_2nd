@@ -31,12 +31,11 @@ interface ComplaintListPageProps {
 }
 
 const statusMap: Record<string, { label: string; color: string }> = {
-  RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-800' },
-  NORMALIZED: { label: '정규화', color: 'bg-purple-100 text-purple-800' },
-  RECOMMENDED: { label: '재이관 요청', color: 'bg-cyan-100 text-cyan-800' },
-  IN_PROGRESS: { label: '처리중', color: 'bg-yellow-100 text-yellow-800' },
-  RESOLVED: { label: '처리완료', color: 'bg-green-100 text-green-800' },
-  CLOSED: { label: '종결', color: 'bg-green-100 text-green-800' },
+  RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  RECOMMENDED: { label: '이관 요청', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  IN_PROGRESS: { label: '처리중', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  RESOLVED: { label: '답변완료', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  CLOSED: { label: '종결', color: 'bg-slate-100 text-slate-600 border-slate-300' },
 };
 
 export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
@@ -453,8 +452,8 @@ export function ComplaintListPage({ onViewDetail }: ComplaintListPageProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0 px-4 !pb-3 text-sm text-slate-700 leading-relaxed bg-white/50">
-                {selectedComplaintData.neutralSummary ? (
-                  selectedComplaintData.neutralSummary
+                {selectedComplaintData.coreRequest ? (
+                  selectedComplaintData.coreRequest
                 ) : (
                   <span className="text-slate-400">요약 내용이 없습니다.</span>
                 )}

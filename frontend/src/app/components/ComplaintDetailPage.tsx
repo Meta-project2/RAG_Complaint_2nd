@@ -31,12 +31,18 @@ const DEPARTMENTS = [
 ];
 
 const statusMap: Record<string, { label: string; color: string }> = {
-  RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-800' },
-  NORMALIZED: { label: '정규화', color: 'bg-purple-100 text-purple-800' },
-  RECOMMENDED: { label: '재이관 요청', color: 'bg-cyan-100 text-cyan-800' },
-  IN_PROGRESS: { label: '처리중', color: 'bg-yellow-100 text-yellow-800' },
-  RESOLVED: { label: '처리완료', color: 'bg-green-100 text-green-800' },
-  CLOSED: { label: '종결', color: 'bg-green-100 text-green-800' },
+  RECEIVED: { label: '접수', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  RECOMMENDED: { label: '이관 요청', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+  IN_PROGRESS: { label: '처리중', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  RESOLVED: { label: '답변완료', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  CLOSED: { label: '종결', color: 'bg-slate-100 text-slate-600 border-slate-300' },
+};
+
+const incidentstatusMap: Record<string, { label: string; color: string }> = {
+  OPEN: { label: '발생', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+  IN_PROGRESS: { label: '대응중', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  RESOLVED: { label: '해결', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+  CLOSED: { label: '종결', color: 'bg-slate-100 text-slate-600 border-slate-300' },
 };
 
 export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPageProps) {
@@ -61,11 +67,14 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
-  const knowledgeSources = [
-    { id: 'KB-001', type: '매뉴얼', title: '도로 유지보수 업무 매뉴얼', section: '제3장 긴급 보수', confidence: 95, snippet: '긴급도가 높은 도로 파손의 경우 접수 후 24시간 이내 현장 조사 및 임시 조치를 실시하고...' },
-    { id: 'KB-002', type: '규정', title: '도로법 시행규칙', section: '제12조', confidence: 88, snippet: '도로관리청은 도로의 파손, 함몰 등으로 인하여 교통 안전에 지장을 초래할 우려가 있는 경우...' },
-    { id: 'KB-003', type: '사례', title: '2025년 도로 파손 처리 사례집', section: 'Case #45', confidence: 82, snippet: '역삼동 유사 사례: 접수 후 4시간 내 현장 조사, 12시간 내 임시 보수 완료...' },
-  ];
+  // const knowledgeSources = [
+  //   { id: 'KB-001', type: '매뉴얼', title: '도로 유지보수 업무 매뉴얼', section: '제3장 긴급 보수', confidence: 95, snippet: '긴급도가 높은 도로 파손의 경우 접수 후 24시간 이내 현장 조사 및 임시 조치를 실시하고...' },
+  //   { id: 'KB-002', type: '규정', title: '도로법 시행규칙', section: '제12조', confidence: 88, snippet: '도로관리청은 도로의 파손, 함몰 등으로 인하여 교통 안전에 지장을 초래할 우려가 있는 경우...' },
+  //   { id: 'KB-003', type: '사례', title: '2025년 도로 파손 처리 사례집', section: 'Case #45', confidence: 82, snippet: '역삼동 유사 사례: 접수 후 4시간 내 현장 조사, 12시간 내 임시 보수 완료...' },
+  // ];
+
+  const [documents, setDocuments] = useState<any[]>([]);
+
   const suggestedPrompts = ['관련 규정/매뉴얼 찾아줘', '유사 사례 결과 요약해줘', '처리 안내 문구(공문체) 초안 작성'];
 
   useEffect(() => {
@@ -155,33 +164,59 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
     } catch (e) { toast.error("요청 실패"); }
   };
 
-  const handleSendChat = async () => {
-    if (!chatInput.trim()) return;
-    const userMessage = chatInput;
-    setChatMessages([...chatMessages, { role: 'user', content: userMessage }]);
-    setChatInput('');
+  const handleSendChat = async (message: string, action: 'chat' | 'search_law' = 'chat') => {
+    if (!message.trim() && action === 'chat') return;
+
+    // 1. 사용자 메시지 UI 표시 (버튼 클릭 시엔 메시지 표시 안 함 or 선택사항)
+    if (action === 'chat') {
+      setChatMessages((prev) => [...prev, { role: 'user', content: message }]);
+      setChatInput('');
+    } else {
+      // 버튼 클릭 시 안내 메시지 추가
+      setChatMessages((prev) => [...prev, { role: 'user', content: `${message}` }]);
+    }
+
     setIsChatLoading(true);
 
     try {
+      // ID 파싱 (기존 로직 유지)
       let numericId = complaintId;
       if (typeof complaintId === 'string' && complaintId.includes('-')) {
         const parts = complaintId.split('-');
         const lastPart = parts[parts.length - 1];
         if (!isNaN(parseInt(lastPart))) numericId = parseInt(lastPart).toString();
       }
-      const response = await fetch(`http://localhost:8000/api/complaints/${numericId}/chat`, {
+
+      // 2. Python AI 서버 호출
+      const response = await fetch(`http://localhost:8000/api/complaints/${numericId}/ai-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: userMessage }),
+        body: JSON.stringify({
+          query: action === 'chat' ? message : '', // 버튼 클릭 시엔 쿼리 비움
+          action: action
+        }),
       });
+
       const data = await response.json();
+
       if (data.status === 'success') {
-        setChatMessages((prev) => [...prev, { role: 'assistant', content: data.result, citations: [] }]);
+        // 3. 응답 처리
+        // (1) AI 답변 말풍선 추가
+        setChatMessages((prev) => [...prev, {
+          role: 'assistant',
+          content: data.data.answer
+        }]);
+
+        // (2) 우측 문서 카드 리스트 갱신
+        if (data.data.documents && data.data.documents.length > 0) {
+          setDocuments(data.data.documents);
+        }
       } else {
         setChatMessages((prev) => [...prev, { role: 'assistant', content: `⚠️ 오류: ${data.message}` }]);
       }
     } catch (error) {
-      setChatMessages((prev) => [...prev, { role: 'assistant', content: "🚫 서버 연결 실패" }]);
+      console.error(error);
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: "🚫 AI 서버 연결 실패" }]);
     } finally {
       setIsChatLoading(false);
     }
@@ -240,7 +275,7 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
             {isMine && !isSelectedClosed && complaint.status !== 'RECOMMENDED' && (
               <>
                 <Button variant="outline" onClick={() => setShowRerouteDialog(true)}>
-                  <RefreshCw className="w-4 h-4 mr-2" /> 재이관 요청
+                  <RefreshCw className="w-4 h-4 mr-2" /> 이관 요청
                 </Button>
                 <Button variant="ghost" onClick={handleRelease} className="text-red-600 hover:bg-red-50">
                   <UserMinus className="w-4 h-4 mr-2" /> 담당 취소
@@ -250,9 +285,9 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
           </div>
         </div>
 
-{/* grid 대신 flex로 변경하여 내용물 크기에 맞게 공간 확보 */}
+        {/* grid 대신 flex로 변경하여 내용물 크기에 맞게 공간 확보 */}
         <div className="flex flex-wrap items-center gap-15 text-sm w-full mt-4">
-          
+
           {/* 1. 접수일시: 줄바꿈 절대 금지 (whitespace-nowrap) */}
           <div className="whitespace-nowrap">
             <span className="text-muted-foreground">접수일시: </span>
@@ -316,14 +351,14 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                 >
                   중복 민원
                 </TabsTrigger>
-{/* 
+
                 <TabsTrigger
                   value="knowledge"
                   className="flex-none data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-none font-normal data-[state=active]:font-bold rounded-lg transition-all px-4"
                 >
                   <Sparkles className="h-4 w-4 mr-1" />
                   지식·사례 검색
-                </TabsTrigger> */}
+                </TabsTrigger>
 
               </TabsList>
 
@@ -443,7 +478,9 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                             <h3 className="text-sm font-bold mb-1">{complaint.incidentTitle}</h3>
                             <p className="text-xs text-muted-foreground">{complaint.incidentId}</p>
                           </div>
-                          <Badge className="bg-yellow-100 text-yellow-800">{complaint.incidentStatus}</Badge>
+                      <Badge variant="secondary" className={`text-[10px] px-2 py-0.5 border ${incidentstatusMap[complaint.incidentStatus]?.color || 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+                        {incidentstatusMap[complaint.incidentStatus]?.label || complaint.incidentStatus}
+                      </Badge>
                         </div>
                         <div className="grid grid-cols-3 gap-3 text-sm">
                           <div><span className="text-xs text-muted-foreground">구성민원수</span><p>{complaint.incidentComplaintCount}건</p></div>
@@ -484,26 +521,56 @@ export function ComplaintDetailPage({ complaintId, onBack }: ComplaintDetailPage
                     </ScrollArea>
                     <div className="p-4 border-t border-border space-y-2">
                       <div className="flex flex-wrap gap-2">
-                        {suggestedPrompts.map(p => <Button key={p} variant="outline" size="sm" onClick={() => { setChatInput(p); handleSendChat(); }}>{p}</Button>)}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendChat('관련 규정/매뉴얼 찾아줘', 'search_law')}
+                        >
+                          관련 규정/매뉴얼 찾아줘
+                        </Button>
+                        {/* 다른 버튼들은 아직 구현 안 했으므로 비활성화하거나 chat으로 연결 */}
+                        <Button variant="outline" size="sm" disabled>유사 사례 결과 요약해줘 (준비중)</Button>
+                        <Button variant="outline" size="sm" disabled>처리 안내 문구 초안 작성 (준비중)</Button>
                       </div>
                       <div className="flex gap-2">
-                        <Input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChat()} />
-                        <Button onClick={handleSendChat} disabled={isChatLoading}><Send className="w-4 h-4" /></Button>
+                        <Input
+                          value={chatInput}
+                          onChange={e => setChatInput(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleSendChat(chatInput, 'chat')}
+                          placeholder="질문을 입력하세요..."
+                        />
+                        <Button onClick={() => handleSendChat(chatInput, 'chat')} disabled={isChatLoading}>
+                          <Send className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
                   <div className="bg-muted/30 p-4">
                     <h3 className="text-sm mb-3">검색된 문서</h3>
                     <ScrollArea className="h-full">
-                      {knowledgeSources.map(s => (
-                        <Card key={s.id} className="mb-2 cursor-pointer hover:border-primary" onClick={() => setSelectedSource(s)}>
-                          <CardContent className="p-3 text-xs space-y-1">
-                            <div className="flex justify-between"><Badge variant="outline">{s.type}</Badge> <span>{s.confidence}%</span></div>
-                            <div className="font-bold">{s.title}</div>
-                            <div className="text-muted-foreground line-clamp-2">{s.snippet}</div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                      {documents.length === 0 ? (
+                        <div className="text-xs text-muted-foreground text-center py-4">
+                          검색된 관련 문서가 없습니다.
+                        </div>
+                      ) : (
+                        documents.map((doc, idx) => (
+                          <Card key={idx} className="mb-2 cursor-pointer hover:border-primary" onClick={() => setSelectedSource(doc)}>
+                            <CardContent className="p-3 text-xs space-y-1">
+                              <div className="flex justify-between">
+                                {/* doc.title이나 doc.article_no가 없을 경우 대비 */}
+                                <Badge variant="outline">법령/규정</Badge>
+                              </div>
+                              <div className="font-bold">
+                                {doc.title || '문서명 없음'} {doc.article_no || doc.section || ''}
+                              </div>
+                              {/* DB 컬럼명에 따라 chunk_text 혹은 content 표시 */}
+                              <div className="text-muted-foreground line-clamp-3">
+                                {doc.chunk_text || doc.content || '내용 없음'}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))
+                      )}
                     </ScrollArea>
                   </div>
                 </div>

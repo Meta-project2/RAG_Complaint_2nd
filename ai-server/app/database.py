@@ -168,20 +168,8 @@ def search_cases_by_text(embedding_vector: List[float], limit: int = 3) -> List[
         cur.close()
         conn.close()
 
-# ========================================================
-#  법령 검색 (Law Search)
-# ========================================================
-
 def search_laws_by_id(complaint_id: int, limit: int = 3) -> List[Dict]:
-    """[자동 모드] 민원 ID를 기준으로 관련된 법령/규정을 검색합니다.
-
-    Args:
-        complaint_id (int): 기준 민원 ID
-        limit (int): 가져올 최대 개수
-
-    Returns:
-        List[Dict]: 유사도 순으로 정렬된 법령 리스트
-    """
+    """[자동 모드] 민원 ID 기준 법령 검색 (테이블명 law_chunks로 수정됨)"""
     conn = get_db_connection()
     if not conn: return []
     cur = conn.cursor()
@@ -193,10 +181,10 @@ def search_laws_by_id(complaint_id: int, limit: int = 3) -> List[Dict]:
             WHERE complaint_id = %s AND is_current = true LIMIT 1
         )
         SELECT 
-            d.title, kc.section, kc.content,
-            (kc.embedding <=> (SELECT embedding FROM current_vec)) as distance
-        FROM knowledge_chunks kc
-        JOIN knowledge_documents d ON kc.document_id = d.id
+            d.title, lc.article_no, lc.chunk_text,
+            (lc.embedding <=> (SELECT embedding FROM current_vec)) as distance
+        FROM law_chunks lc
+        JOIN law_documents d ON lc.document_id = d.id
         ORDER BY distance ASC
         LIMIT %s;
         """
@@ -207,41 +195,27 @@ def search_laws_by_id(complaint_id: int, limit: int = 3) -> List[Dict]:
         conn.close()
 
 def search_laws_by_text(embedding_vector: List[float], limit: int = 3, keyword: str = None) -> List[Dict]:
-    """[수동 모드] 하이브리드 검색(Vector + Keyword)을 수행합니다.
-
-    키워드가 제공되면 ILIKE 검색으로 필터링 후 벡터 유사도를 계산하여
-    정확도와 문맥을 동시에 고려합니다.
-
-    Args:
-        embedding_vector (list): 질문 벡터
-        limit (int): 최대 개수
-        keyword (str, optional): 필터링할 핵심 키워드 (ILIKE 검색용)
-
-    Returns:
-        List[Dict]: 법령 리스트
-    """
+    """[수동 모드] 텍스트 임베딩 기준 법령 검색"""
     conn = get_db_connection()
     if not conn: return []
     cur = conn.cursor()
     
     try:
         if keyword:
-            # ILIKE: 대소문자 구분 없는 부분 일치 검색 (Hybrid Search)
             query = """
-            SELECT d.title, kc.section, kc.content, (kc.embedding <=> %s::vector) as distance
-            FROM knowledge_chunks kc
-            JOIN knowledge_documents d ON kc.document_id = d.id
-            WHERE kc.content ILIKE %s 
+            SELECT d.title, lc.article_no, lc.chunk_text, (lc.embedding <=> %s::vector) as distance
+            FROM law_chunks lc
+            JOIN law_documents d ON lc.document_id = d.id
+            WHERE lc.chunk_text ILIKE %s 
             ORDER BY distance ASC
             LIMIT %s;
             """
             cur.execute(query, (embedding_vector, f"%{keyword}%", limit))
         else:
-            # 순수 벡터 검색
             query = """
-            SELECT d.title, kc.section, kc.content, (kc.embedding <=> %s::vector) as distance
-            FROM knowledge_chunks kc
-            JOIN knowledge_documents d ON kc.document_id = d.id
+            SELECT d.title, lc.article_no, lc.chunk_text, (lc.embedding <=> %s::vector) as distance
+            FROM law_chunks lc
+            JOIN law_documents d ON lc.document_id = d.id
             ORDER BY distance ASC
             LIMIT %s;
             """

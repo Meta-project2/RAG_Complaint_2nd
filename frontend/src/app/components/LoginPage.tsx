@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { springApi } from "../../lib/springApi";
+import minwonIcon from "@/lib/minwon1.png"; 
 
 interface LoginPageProps {
   onLogin: (role: 'agent' | 'admin') => void;
@@ -67,9 +68,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-4 text-center pb-8">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-lg bg-primary flex items-center justify-center">
-              <FileText className="h-10 w-10 text-primary-foreground" />
-            </div>
+              <img src={minwonIcon} alt="파일" className="h-30 w-30" />
           </div>
           <div>
             <CardTitle className="text-2xl">내부 업무 시스템</CardTitle>

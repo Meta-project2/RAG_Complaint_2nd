@@ -131,7 +131,7 @@ export function RerouteRequestsPage() {
       <div className={`flex-1 flex flex-col`}>
         {/* 상단 헤더 (ComplaintListPage 스타일 통일) */}
         <div className="h-16 border-b border-border bg-card px-6 shadow-sm flex items-center gap-3">
-          <h1 className="text-2.5xl font-bold text-slate-900">재이관 요청함</h1>
+          <h1 className="text-2.5xl font-bold text-slate-900">이관 요청함</h1>
           <p className="text-sm text-slate-400 font-medium pt-1">부서 간 민원 이관 승인/반려 관리</p>
         </div>
 
@@ -288,7 +288,7 @@ export function RerouteRequestsPage() {
       {selectedRequest && selectedRequestData && (
         <div className="fixed right-0 top-0 h-screen w-96 bg-white border-l border-slate-200 shadow-2xl z-50 overflow-y-auto">
           <div className="px-4 h-16 border-b border-border flex items-center justify-between sticky top-0 bg-white z-10">
-            <h3 className="text-sm font-bold">재이관 검토</h3>
+            <h3 className="text-sm font-bold">이관 검토</h3>
             <Button
               variant="ghost"
               size="icon"
@@ -408,7 +408,7 @@ export function RerouteRequestsPage() {
       <Dialog open={showApprovalDialog} onOpenChange={setShowApprovalDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>재이관 승인 확인</DialogTitle>
+            <DialogTitle>이관 승인 확인</DialogTitle>
             <DialogDescription>
               승인 시 민원이 즉시 <b>{selectedRequestData?.requestedDept}</b>로 이관됩니다.
             </DialogDescription>
@@ -442,7 +442,7 @@ export function RerouteRequestsPage() {
       <Dialog open={showRejectionDialog} onOpenChange={setShowRejectionDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-red-700">재이관 반려</DialogTitle>
+            <DialogTitle className="text-red-700">이관 반려</DialogTitle>
             <DialogDescription>반려 사유를 입력하세요</DialogDescription>
           </DialogHeader>
           <div className="py-4">

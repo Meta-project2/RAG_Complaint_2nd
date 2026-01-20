@@ -14,6 +14,7 @@ export interface ComplaintDto {
   addressText?: string;
   tags?: string[];
   managerName?: string;
+  coreRequest?: string;
 }
 
 // 민원 이력 아이템 (부모/자식 공통)

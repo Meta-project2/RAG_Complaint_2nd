@@ -30,13 +30,14 @@ public class ComplaintController {
     @Operation(summary = "민원 리스트 조회", description = "로그인한 사용자의 부서에 배정된 민원 리스트를 전부 조회합니다.")
     @GetMapping
     public Page<ComplaintResponse> getComplaints(
-            @ModelAttribute ComplaintSearchCondition condition
+            @ModelAttribute ComplaintSearchCondition condition, HttpServletRequest request
     // @AuthenticationPrincipal UserDetails userDetails
     ) {
         // 로그인한 사람이 '3번 부서' 소속이라고 가정
         // 나중에는 userDetails에서 진짜 부서 ID
         Long myDepartmentId = 11L;
-
+        User user = getSessionUser(request);
+        myDepartmentId = user.getDepartment().getId();
 
         return complaintRepository.search(myDepartmentId, condition);
     }
@@ -76,7 +77,7 @@ public class ComplaintController {
         return ResponseEntity.ok(message);
     }
 
-    @Operation(summary = "재이관 요청 (Reroute)", description = "타 부서 소관인 경우 재이관을 요청합니다. (관리자 승인 대기 상태가 됨)")
+    @Operation(summary = "이관 요청 (Reroute)", description = "타 부서 소관인 경우 이관을 요청합니다. (관리자 승인 대기 상태가 됨)")
     @PostMapping("/{id}/reroute")
     public ResponseEntity<String> requestReroute(
             @Parameter(description = "민원 ID", example = "1") @PathVariable Long id,
@@ -84,7 +85,7 @@ public class ComplaintController {
             HttpServletRequest request) {
         User user = getSessionUser(request);
         complaintService.requestReroute(id, dto, user.getId());
-        return ResponseEntity.ok("재이관 요청이 접수되었습니다. 관리자 승인 후 반영됩니다.");
+        return ResponseEntity.ok("이관 요청이 접수되었습니다. 관리자 승인 후 반영됩니다.");
     }
 
     @Operation(summary = "담당 취소 (Release)", description = "배정받은 민원을 포기하고 다시 접수 상태로 되돌립니다.")
