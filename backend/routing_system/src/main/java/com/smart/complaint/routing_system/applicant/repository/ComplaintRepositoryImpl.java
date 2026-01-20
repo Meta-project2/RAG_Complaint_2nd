@@ -6,7 +6,6 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberTemplate;
-import com.querydsl.core.types.dsl.StringTemplate;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.smart.complaint.routing_system.applicant.domain.ComplaintStatus;
@@ -20,14 +19,9 @@ import com.smart.complaint.routing_system.applicant.dto.ChildComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDetailDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintDto;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintHeatMap;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintResponse;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchCondition;
-import com.smart.complaint.routing_system.applicant.dto.ComplaintSearchResult;
 import com.smart.complaint.routing_system.applicant.dto.AdminDashboardStatsDto.*;
 import com.smart.complaint.routing_system.applicant.dto.CategoryAvgDto;
 import com.querydsl.core.types.dsl.CaseBuilder;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.smart.complaint.routing_system.applicant.dto.ComplaintListDto;
 
 import jakarta.persistence.Query;
@@ -69,7 +63,8 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
         @Override
         public Page<ComplaintResponse> search(Long departmentId, ComplaintSearchCondition condition) {
                 List<Tuple> results = queryFactory
-                                .select(complaint, normalization.neutralSummary,normalization.coreRequest, user.displayName)
+                                .select(complaint, normalization.neutralSummary, normalization.coreRequest,
+                                                user.displayName)
                                 .from(complaint)
                                 .leftJoin(normalization).on(normalization.complaint.eq(complaint))
                                 .leftJoin(user).on(complaint.answeredBy.eq(user.id))
@@ -78,7 +73,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                                 keywordContains(condition.getKeyword()),
                                                 statusEq(condition.getStatus()),
                                                 hasIncident(condition.getHasIncident())
-//                                                hasTags(condition.getHasTags())
+                                // hasTags(condition.getHasTags())
                                 )
                                 .orderBy(getOrderSpecifier(condition.getSort())) // 정렬 적용
                                 .offset(condition.getOffset()) // 건너뛰기
@@ -111,7 +106,7 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                                 keywordContains(condition.getKeyword()),
                                                 statusEq(condition.getStatus()),
                                                 hasIncident(condition.getHasIncident())
-//                                                hasTags(condition.getHasTags())
+                                // hasTags(condition.getHasTags())
                                 )
                                 .fetchOne();
 
@@ -122,11 +117,12 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                 return new PageImpl<>(content, PageRequest.of(condition.getPage() - 1, condition.getSize()), total);
         }
 
-        /* 수정 전
-        private BooleanExpression hasTagsEq(Boolean hasTags) {
-            return (hasTags != null && hasTags) ? complaint.tag.isNotNull() : null;
-        }
-        */
+        /*
+         * 수정 전
+         * private BooleanExpression hasTagsEq(Boolean hasTags) {
+         * return (hasTags != null && hasTags) ? complaint.tag.isNotNull() : null;
+         * }
+         */
 
         // 수정 후: 기능을 아예 비활성화하거나 null을 반환하게 합니다.
         private BooleanExpression hasTagsEq(Boolean hasTags) {
@@ -437,40 +433,40 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                         // [전체 보기] 모든 '국(GUK)' 기준 (하위 과들의 민원 합산)
                         QDepartment subDept = new QDepartment("subDept");
                         return queryFactory
-                                .select(Projections.constructor(DeptStatusDto.class,
-                                        d.name,
-                                        c.count().coalesce(0L), // 민원 없어도 0으로 표시
-                                        new CaseBuilder()
-                                                .when(c.status.notIn(ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED))
-                                                .then(1L).otherwise(0L)
-                                                .sum().coalesce(0L)
-                                ))
-                                .from(d)
-                                .leftJoin(subDept).on(subDept.parent.id.eq(d.id)) // 국 하위의 과들 조인
-                                .leftJoin(c).on(c.currentDepartmentId.eq(subDept.id)
-                                        .and(c.receivedAt.between(start, end))) // 기간 내 민원 조인
-                                .where(d.category.eq("GUK").and(d.isActive.isTrue()))
-                                .groupBy(d.id, d.name)
-                                .orderBy(c.count().desc())
-                                .fetch();
+                                        .select(Projections.constructor(DeptStatusDto.class,
+                                                        d.name,
+                                                        c.count().coalesce(0L), // 민원 없어도 0으로 표시
+                                                        new CaseBuilder()
+                                                                        .when(c.status.notIn(ComplaintStatus.RESOLVED,
+                                                                                        ComplaintStatus.CLOSED))
+                                                                        .then(1L).otherwise(0L)
+                                                                        .sum().coalesce(0L)))
+                                        .from(d)
+                                        .leftJoin(subDept).on(subDept.parent.id.eq(d.id)) // 국 하위의 과들 조인
+                                        .leftJoin(c).on(c.currentDepartmentId.eq(subDept.id)
+                                                        .and(c.receivedAt.between(start, end))) // 기간 내 민원 조인
+                                        .where(d.category.eq("GUK").and(d.isActive.isTrue()))
+                                        .groupBy(d.id, d.name)
+                                        .orderBy(c.count().desc())
+                                        .fetch();
                 } else {
                         // [국 선택] 해당 국 하위의 모든 '과(GWA)' 리스트 (0건 포함)
                         return queryFactory
-                                .select(Projections.constructor(DeptStatusDto.class,
-                                        d.name,
-                                        c.count().coalesce(0L),
-                                        new CaseBuilder()
-                                                .when(c.status.notIn(ComplaintStatus.RESOLVED, ComplaintStatus.CLOSED))
-                                                .then(1L).otherwise(0L)
-                                                .sum().coalesce(0L)
-                                ))
-                                .from(d)
-                                .leftJoin(c).on(c.currentDepartmentId.eq(d.id)
-                                        .and(c.receivedAt.between(start, end)))
-                                .where(d.parent.id.eq(deptId).and(d.isActive.isTrue()))
-                                .groupBy(d.id, d.name)
-                                .orderBy(c.count().desc())
-                                .fetch();
+                                        .select(Projections.constructor(DeptStatusDto.class,
+                                                        d.name,
+                                                        c.count().coalesce(0L),
+                                                        new CaseBuilder()
+                                                                        .when(c.status.notIn(ComplaintStatus.RESOLVED,
+                                                                                        ComplaintStatus.CLOSED))
+                                                                        .then(1L).otherwise(0L)
+                                                                        .sum().coalesce(0L)))
+                                        .from(d)
+                                        .leftJoin(c).on(c.currentDepartmentId.eq(d.id)
+                                                        .and(c.receivedAt.between(start, end)))
+                                        .where(d.parent.id.eq(deptId).and(d.isActive.isTrue()))
+                                        .groupBy(d.id, d.name)
+                                        .orderBy(c.count().desc())
+                                        .fetch();
                 }
         }
 
@@ -626,7 +622,8 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
 
                 List<Object[]> chartResults = entityManager.createNativeQuery(chartSql).getResultList();
                 List<CategoryAvgDto> responseTimeData = chartResults.stream()
-                                .map(row -> new CategoryAvgDto(((String) row[0]).replace("과", ""), ((Number) row[1]).doubleValue()))
+                                .map(row -> new CategoryAvgDto(((String) row[0]).replace("과", ""),
+                                                ((Number) row[1]).doubleValue()))
                                 .collect(Collectors.toList());
 
                 return new ComplaintStatDto(totalAvg, responseTimeData, fastestDept, improvementRate);

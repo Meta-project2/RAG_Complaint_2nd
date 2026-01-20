@@ -114,14 +114,13 @@ async def preprocess_complaint(req: ComplaintRequest, request: Request):
             "output_type": "chat",
             "input_type": "text",
             "tweaks": {
-                ''' 
-                "TextInput-MBAG": {
-                    "input_value": req.title
-                },
-                "TextInput-NNDwa": {
-                    "input_value": req.body
-                }
-                '''
+
+                # "TextInput-MBAG": {
+                #     "input_value": req.title
+                # },
+                # "TextInput-NNDwa": {
+                #     "input_value": req.body
+                # }
                 # 서버 전용
                 "TITLE-QaZnz": {
                     "input_value": req.title
@@ -129,7 +128,6 @@ async def preprocess_complaint(req: ComplaintRequest, request: Request):
                 "BODY-d62U4": {
                     "input_value": req.body
                 }
-
             }
         }
         payload["session_id"] = str(uuid.uuid4())

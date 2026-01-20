@@ -17,11 +17,13 @@ import com.smart.complaint.routing_system.applicant.entity.Complaint;
 import com.smart.complaint.routing_system.applicant.entity.ComplaintNormalization;
 import com.smart.complaint.routing_system.applicant.entity.ComplaintReroute;
 import com.smart.complaint.routing_system.applicant.entity.Department;
+import com.smart.complaint.routing_system.applicant.entity.User;
 import com.smart.complaint.routing_system.applicant.repository.ChildComplaintRepository;
 import com.smart.complaint.routing_system.applicant.repository.ComplaintNormalizationRepository;
 import com.smart.complaint.routing_system.applicant.repository.ComplaintRepository;
 import com.smart.complaint.routing_system.applicant.repository.ComplaintRerouteRepository;
 import com.smart.complaint.routing_system.applicant.repository.DepartmentRepository;
+import com.smart.complaint.routing_system.applicant.repository.UserRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -55,6 +57,7 @@ public class ComplaintService {
     private final ChildComplaintRepository childComplaintRepository;
     private final DepartmentRepository departmentRepository;
     private final ComplaintNormalizationRepository complaintNormalizationRepository;
+    private final UserRepository userRepository;
     private final RestTemplate restTemplate;
 
     /**
@@ -188,13 +191,34 @@ public class ComplaintService {
         complaint.releaseManager();
     }
 
+    private boolean isPureNumeric(String str) {
+        return str != null && str.matches("\\d+");
+    }
+
     @Transactional
     public Long receiveComplaint(String applicantId, ComplaintSubmitDto complaintSubmitDto) {
 
         log.info("민원 접수 프로세스 시작 - 민원인 ID: {}", applicantId);
 
+        // 1. 일반 PK(숫자)로 먼저 조회 시도
+        Long actualUserId = null;
+
+        if (isPureNumeric(applicantId)) {
+            // 숫자라면 PK일 가능성이 높으므로 먼저 exists 체크
+            if (userRepository.existsById(Long.parseLong(applicantId))) {
+                actualUserId = Long.parseLong(applicantId);
+            }
+        }
+
+        // 2. PK가 아니거나 검색 실패 시 Querydsl로 소셜 유저 조회
+        if (actualUserId == null) {
+            User socialUser = userRepository.findByProviderIdLike(applicantId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + applicantId));
+            actualUserId = socialUser.getId();
+        }
+
         Complaint newComplaint = Complaint.builder()
-                .applicantId(Long.parseLong(applicantId))
+                .applicantId(actualUserId)
                 .title(complaintSubmitDto.getTitle())
                 .body(complaintSubmitDto.getBody())
                 .addressText(complaintSubmitDto.getAddressText())
@@ -392,5 +416,15 @@ public class ComplaintService {
         complaint.cancelComplaint();
         log.info("변경 후 상태 찾은 민원: {}, 상태: {}", complaint.getId(), complaint.getStatus());
         complaintRepository.save(complaint);
+    }
+
+    @Transactional
+    public void closeComplaint(Long id) {
+        // TODO Auto-generated method stub
+        Complaint complaint = complaintRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorMessage.COMPLAINT_NOT_FOUND));
+        log.info("찾은 민원: {}, 상태: {}", complaint.getId(), complaint.getStatus());
+        complaint.closeComplaint();
+        log.info("변경 후 상태 찾은 민원: {}, 상태: {}", complaint.getId(), complaint.getStatus());
     }
 }

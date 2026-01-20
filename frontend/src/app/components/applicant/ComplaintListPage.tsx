@@ -3,11 +3,12 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { ChevronLeft, ChevronRight, Eye, Search, Calendar, ArrowUpDown, RefreshCcw } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Search, Calendar, ArrowUpDown, RefreshCcw, Home, FileText } from 'lucide-react';
 import api from './AxiosInterface';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { Toolbar } from './toolbar';
 
 interface Complaint {
   id: string;
@@ -19,6 +20,15 @@ interface Complaint {
   lastUpdate?: string;
   department?: string;
   assignedTo?: string;
+}
+
+interface LocationState {
+  searchKeyword: string;
+  startDate: string;
+  endDate: string;
+  sortBy: string;
+  selectedStatus: string;
+  currentPage: number;
 }
 
 const STATUS_LABELS = {
@@ -50,20 +60,34 @@ const SORT_LABELS: Record<SortOption, string> = {
 
 export default function PastComplaintsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const savedState = location.state as LocationState | null;
+
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('date-desc');
+  const [currentPage, setCurrentPage] = useState(savedState?.currentPage || 1);
+  const [searchKeyword, setSearchKeyword] = useState(savedState?.searchKeyword || '');
+  const [startDate, setStartDate] = useState(savedState?.startDate || '');
+  const [endDate, setEndDate] = useState(savedState?.endDate || '');
+  const [sortBy, setSortBy] = useState<SortOption>(
+    (savedState?.sortBy as SortOption) || 'date-desc'
+  );
   const [showSortMenu, setShowSortMenu] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [selectedStatus, setSelectedStatus] = useState<string>(savedState?.selectedStatus || 'ALL');
   // 조회 버튼 클릭 시 필터를 적용하기 위한 '트리거' 상태 (실제 필터링 로직에 반영)
   const [searchTrigger, setSearchTrigger] = useState(0);
 
   const handleViewDetail = (id: string) => {
-    navigate(`/applicant/complaints/${id}`);
+    navigate(`/applicant/complaints/${id}`, {
+      state: {
+        searchKeyword,
+        startDate,
+        endDate,
+        sortBy,
+        selectedStatus,
+        currentPage // 현재 페이지 정보 포함
+      }
+    });
   };
 
   const fetchComplaints = async () => {
@@ -214,25 +238,12 @@ export default function PastComplaintsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <div className="bg-white border-b border-gray-200 py-4 shrink-0 shadow-sm">
-        <div className="max-w-[1700px] mx-auto px-10">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">과거 민원 내역</h1>
-            <Button
-              onClick={onGoHome}
-              variant="outline"
-              className="h-11 px-6 text-base"
-            >
-              홈으로 돌아가기
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden font-sans">
+      {/* 통합 툴바 사용 */}
+      <Toolbar subTitle="과거 민원 내역" />
 
       {/* Main Content */}
-      <main className="max-w-[1700px] mx-auto px-10 py-8">
+      <main className="flex-1 max-w-[1700px] mx-auto px-10 py-8 overflow-y-auto">
         <div className="space-y-6">
           {/* [수정] Filters Section - 한 줄 구성 및 조회 버튼 추가 */}
           <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -410,14 +421,20 @@ export default function PastComplaintsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 h-9 font-bold text-xs"
+                        // [수정] CLOSED 또는 CANCELED 상태일 때 버튼 비활성화
+                        disabled={complaint.status === 'CLOSED' || complaint.status === 'CANCELED'}
+                        className={`flex-1 h-9 font-bold text-xs transition-all ${complaint.status === 'CLOSED' || complaint.status === 'CANCELED'
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' // 비활성 스타일
+                          : 'border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700' // 활성 스타일
+                          }`}
                         onClick={() => handleCancel(complaint.id)}
                       >
-                        취하
+                        {complaint.status === 'CANCELED' ? '취하됨' : '취하'}
                       </Button>
+
                       <Button
                         size="sm"
-                        className="flex-1 bg-blue-800 hover:bg-blue-900 text-white h-9 font-bold text-xs"
+                        className="flex-1 bg-blue-800 hover:bg-blue-900 text-white h-9 font-bold text-xs shadow-sm active:scale-95 transition-all"
                         onClick={() => handleViewDetail(complaint.id)}
                       >
                         상세보기

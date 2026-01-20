@@ -13,6 +13,7 @@ import KakaoMap from './KakaoMap';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import api from './AxiosInterface';
+import { Toolbar } from './toolbar';
 
 interface NewComplaintFormProps {
   onGoHome: () => void;
@@ -27,7 +28,7 @@ export interface ComplaintFormData {
   incidentDate: Date;
 }
 
-export function ApplicantComplaintForm({ onGoHome, onViewComplaints, onPreview }: NewComplaintFormProps) {
+export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
 
   const navigate = useNavigate();
   const token = localStorage.getItem('accessToken');
@@ -139,20 +140,8 @@ export function ApplicantComplaintForm({ onGoHome, onViewComplaints, onPreview }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden font-sans">
-      {/* [상단 툴바] 높이 고정 (약 72px) */}
-      <nav className="bg-white border-b border-gray-200 py-4 shrink-0 shadow-sm z-10">
-        <div className="max-w-[1700px] mx-auto px-10 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">새 민원 작성</h1>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={onGoHome} className="h-10 border-gray-200 text-gray-600 hover:bg-gray-50">
-              <Home className="w-4 h-4 mr-2" /> 홈으로
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/applicant/complaints')} className="h-10 border-gray-200 text-gray-600 hover:bg-gray-50">
-              <FileText className="w-4 h-4 mr-2" /> 과거 민원 보기
-            </Button>
-          </div>
-        </div>
-      </nav>
+      {/* 통합 툴바 사용 */}
+      <Toolbar subTitle="민원 작성" />
 
       {/* [본문 컨텐츠] 툴바를 제외한 나머지 높이 전체 사용 */}
       <main className="flex-1 max-w-[1700px] w-full mx-auto px-10 py-6 overflow-hidden">
@@ -228,7 +217,7 @@ export function ApplicantComplaintForm({ onGoHome, onViewComplaints, onPreview }
               <div className="flex-1 rounded-[24px] border border-gray-100 overflow-hidden shadow-inner relative min-h-0">
                 <KakaoMap address={location} onLocationChange={handleLocationChange} onViewDetail={function (id: string): void {
                   throw new Error('Function not implemented.');
-                } } />
+                }} />
               </div>
 
               {/* 액션 버튼 영역: 하단 고정 */}

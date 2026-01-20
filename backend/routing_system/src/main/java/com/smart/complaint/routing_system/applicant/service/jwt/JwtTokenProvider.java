@@ -36,6 +36,10 @@ public class JwtTokenProvider {
     // OAUTH JWT 생성
     public String createJwtToken(String name, String email) {
         // 토큰에 담을 정보: 이름, 이메일
+        if (name == null) {
+            log.error("CRITICAL: 토큰 생성 중 name(Subject)이 null입니다! 이메일: {}", email);
+            name = email; // 임시 방편으로 이메일을 이름 대신 사용
+        }
         Claims claims = Jwts.claims().setSubject(name);
         log.info("JWT 토큰 생성 대상 사용자: " + name + ", 이메일: " + email);
         claims.put("email", email);

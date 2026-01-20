@@ -30,7 +30,6 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-        private final OAuth2Service oAuth2Service;
         private final OAuth2SuccessHandler oAuth2SuccessHandler;
         private final JwtTokenProvider jwtTokenProvider;
         private final CustomOAuth2UserService customOAuth2UserService;
