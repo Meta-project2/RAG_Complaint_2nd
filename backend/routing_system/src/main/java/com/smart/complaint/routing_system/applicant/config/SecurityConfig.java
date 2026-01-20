@@ -17,7 +17,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.smart.complaint.routing_system.applicant.service.CustomOAuth2UserService;
 import com.smart.complaint.routing_system.applicant.service.jwt.JwtAuthenticationFilter;
 import com.smart.complaint.routing_system.applicant.service.jwt.JwtTokenProvider;
 import com.smart.complaint.routing_system.applicant.service.jwt.OAuth2Service;
@@ -33,7 +32,6 @@ public class SecurityConfig {
         private final OAuth2Service oAuth2Service;
         private final OAuth2SuccessHandler oAuth2SuccessHandler;
         private final JwtTokenProvider jwtTokenProvider;
-        private final CustomOAuth2UserService customOAuth2UserService;
 
         @Bean
         public RestTemplate restTemplate() {
@@ -98,9 +96,8 @@ public class SecurityConfig {
                                                 .requestMatchers("/api/applicant/**").authenticated()
                                                 .anyRequest().authenticated())
                                 .oauth2Login(oauth2 -> oauth2
-                                                .userInfoEndpoint(userInfo -> userInfo
-                                                                .userService(customOAuth2UserService))
-                                                .successHandler(oAuth2SuccessHandler))
+                                                .successHandler(oAuth2SuccessHandler)
+                                                .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2Service)))
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/login")

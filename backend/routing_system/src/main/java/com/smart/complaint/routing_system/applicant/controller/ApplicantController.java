@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -60,7 +59,7 @@ public class ApplicantController {
     @PostMapping("api/applicant/login")
     public ResponseEntity<Map<String, String>> applicantLogin(@RequestBody UserLoginRequest loginRequest) {
 
-        // 서비스에서 토큰을 직접 받아옵니다.
+        // 서비스에서 토큰을 직접 받아옵니다. 실패 시 ExceptionHandler가 처리하므로 코드가 간결해집니다.
         String token = applicantService.applicantLogin(loginRequest);
 
         // 프론트엔드에서 response.data.accessToken으로 받기로 했으므로 Map으로 감싸서 보냅니다.
@@ -172,7 +171,6 @@ public class ApplicantController {
     }
 
     // 민원 통계 데이터
-    @Cacheable(value = "complaintStats", key = "'mainStat'")
     @GetMapping("/api/applicant/complaints-stat")
     public ResponseEntity<ComplaintStatDto> calculateStat() {
 
@@ -181,7 +179,6 @@ public class ApplicantController {
         return ResponseEntity.ok(statDtos);
     }
 
-    @Cacheable(value = "complaintKeywords", key = "'mainKeywords'")
     @GetMapping("/api/applicant/complaints-keyword")
     public ResponseEntity<List<KeywordsDto>> getKeywords() {
 
