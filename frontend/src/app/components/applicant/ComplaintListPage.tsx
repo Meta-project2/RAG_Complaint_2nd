@@ -31,12 +31,12 @@ const STATUS_LABELS = {
 };
 
 const STATUS_COLORS = {
-  RECEIVED: 'bg-blue-50 text-blue-700 border-blue-200',      // 신규 접수: 청량한 블루
-  RECOMMENDED: 'bg-purple-50 text-purple-700 border-purple-200', // 부서 추천: 신비로운 퍼플
-  IN_PROGRESS: 'bg-amber-50 text-amber-700 border-amber-200',  // 처리중: 주의가 필요한 오렌지/앰버
-  RESOLVED: 'bg-emerald-50 text-emerald-700 border-emerald-200', // 답변 완료: 신뢰의 그린
+  RECEIVED: 'bg-blue-100 text-blue-700 border-blue-200',      // 신규 접수: 청량한 블루
+  RECOMMENDED: 'bg-purple-100 text-purple-700 border-purple-200', // 부서 추천: 신비로운 퍼플
+  IN_PROGRESS: 'bg-amber-100 text-amber-700 border-amber-200',  // 처리중: 주의가 필요한 오렌지/앰버
+  RESOLVED: 'bg-emerald-100 text-emerald-700 border-emerald-200', // 답변 완료: 신뢰의 그린
   CLOSED: 'bg-slate-100 text-slate-600 border-slate-300',     // 종결: 차분한 그레이
-  CANCELED: 'bg-rose-50 text-rose-700 border-rose-200',      // 취소/반려: 경고의 레드/로즈
+  CANCELED: 'bg-rose-100 text-rose-700 border-rose-200',      // 취소/반려: 경고의 레드/로즈
 };
 
 type SortOption = 'date-desc' | 'date-asc' | 'status' | 'title';
