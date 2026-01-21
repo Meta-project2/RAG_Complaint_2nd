@@ -344,6 +344,10 @@ public class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
                                 .fetch();
         }
 
+        public List<ComplaintHeatMap> getAllComplaintsWithLatLon(Long id) {
+                return List.of();
+        }
+
         @Override
         public List<ChildComplaintDto> findChildComplaintsByParentId(Long parentId) {
                 QChildComplaint childComplaint = QChildComplaint.childComplaint;
