@@ -21,10 +21,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -59,7 +61,7 @@ public class ApplicantController {
     @PostMapping("api/applicant/login")
     public ResponseEntity<Map<String, String>> applicantLogin(@RequestBody UserLoginRequest loginRequest) {
 
-        // 서비스에서 토큰을 직접 받아옵니다. 실패 시 ExceptionHandler가 처리하므로 코드가 간결해집니다.
+        // 서비스에서 토큰을 직접 받아옵니다.
         String token = applicantService.applicantLogin(loginRequest);
 
         // 프론트엔드에서 response.data.accessToken으로 받기로 했으므로 Map으로 감싸서 보냅니다.
@@ -107,10 +109,10 @@ public class ApplicantController {
     @Operation(summary = "가장 최근 작성한 민원 3개 조회", description = "로그인 시 본인 민원, 비로그인 시 전체 최신 민원 반환")
     @GetMapping("/api/applicant/complaints/top3")
     public ResponseEntity<List<ComplaintDto>> getTop3RecentComplaints(@AuthenticationPrincipal Object principal) {
-        Long id = null;
+        String id = null;
         if (principal != null && !principal.equals("anonymousUser")) {
             try {
-                id = Long.parseLong(principal.toString());
+                id = principal.toString();
             } catch (NumberFormatException e) {
                 log.error("사용자 ID 파싱 에러: {}", principal);
                 // 에러 시 id는 그대로 null 유지
@@ -171,6 +173,7 @@ public class ApplicantController {
     }
 
     // 민원 통계 데이터
+    @Cacheable(value = "complaintStats", key = "'mainStat'")
     @GetMapping("/api/applicant/complaints-stat")
     public ResponseEntity<ComplaintStatDto> calculateStat() {
 
@@ -179,6 +182,7 @@ public class ApplicantController {
         return ResponseEntity.ok(statDtos);
     }
 
+    @Cacheable(value = "complaintKeywords", key = "'mainKeywords'")
     @GetMapping("/api/applicant/complaints-keyword")
     public ResponseEntity<List<KeywordsDto>> getKeywords() {
 
@@ -191,6 +195,14 @@ public class ApplicantController {
     public ResponseEntity<String> cancelComplaint(@PathVariable Long id) {
 
         complaintService.updateStatus(id);
+
+        return ResponseEntity.ok(null);
+    }
+
+    @PatchMapping("/api/applicant/complaints/{id}/close")
+    public ResponseEntity<String> closeComplaint(@PathVariable Long id) {
+
+        complaintService.closeComplaint(id);
 
         return ResponseEntity.ok(null);
     }

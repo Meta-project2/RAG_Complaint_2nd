@@ -37,10 +37,10 @@ public class Complaint {
     @Column(columnDefinition = "TEXT", nullable = false) // PostgreSQL TEXT 타입 매핑
     private String body;
 
-//    @Enumerated(EnumType.STRING)
-//    @Column(name = "tag", nullable = false, columnDefinition = "tag_type")
-//    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-//    private Tag tag;
+    // @Enumerated(EnumType.STRING)
+    // @Column(name = "tag", nullable = false, columnDefinition = "tag_type")
+    // @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    // private Tag tag;
 
     // DB 컬럼명은 그대로 두고, 자바 변수명은 올바르게 수정해서 매핑
     @Column(name = "answerd_by")
@@ -171,6 +171,10 @@ public class Complaint {
 
     public void setAiPredicted(Long departmentId) {
         this.aiPredictedDepartmentId = departmentId;
+    }
+
+    public void closeComplaint() {
+        this.status = ComplaintStatus.CLOSED;
     }
 
 }

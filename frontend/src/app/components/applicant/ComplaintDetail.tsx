@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'; // useEffect 추가
-import { useParams, useNavigate } from 'react-router-dom'; // 훅 추가
+import { useLocation, useParams, useNavigate } from 'react-router-dom'; // 훅 추가
 import api from './AxiosInterface'; // api 인스턴스 가져오기
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { ArrowLeft, Calendar, Building2, User, MessageSquare, ArrowUpDown, Home, FileText, CheckCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { Toolbar } from './toolbar';
 
 interface Message {
   id: string;
@@ -26,6 +27,15 @@ interface ComplaintDetail {
   department?: string;
   assignedTo?: string;
   messages: Message[];
+}
+
+interface LocationState {
+  searchKeyword: string;
+  startDate: string;
+  endDate: string;
+  sortBy: string;
+  selectedStatus: string;
+  currentPage: number;
 }
 
 const STATUS_LABELS = {
@@ -50,13 +60,15 @@ export default function ComplaintDetail() {
 
   const { id } = useParams<{ id: string }>(); // URL에서 ID 추출
   const navigate = useNavigate();
+  const location = useLocation();
 
+  const savedState = location.state as LocationState;
   // 1. 상태 관리 추가
   const [complaint, setComplaint] = useState<ComplaintDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
 
-  const onGoBack = () => navigate('/applicant/complaints');
+  const onGoBack = () => navigate('/applicant/complaints', { state: savedState });
 
   const fetchDetail = async () => {
     try {
@@ -201,40 +213,15 @@ export default function ComplaintDetail() {
   if (isLoading) return <div className="p-20 text-center">정보를 불러오는 중입니다...</div>;
   if (!complaint) return <div className="p-20 text-center">정보를 찾을 수 없습니다.</div>;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation Bar */}
-      <nav className="bg-white border-b border-gray-200 py-4 shrink-0 shadow-sm">
-        <div className="max-w-[1700px] mx-auto px-10">
-          <div className="flex items-center justify-between">
-            {/* 좌측: 타이틀 (본문 시작 라인과 일치) */}
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">민원 상세 내역</h1>
+  const isClosed = complaint.status === 'CLOSED' || complaint.status === 'CANCELED';
 
-            {/* 우측: 버튼 그룹 (본문 끝 라인과 일치) */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/applicant/main")}
-                className="flex items-center gap-2 h-10 border-gray-200 text-gray-600"
-              >
-                <Home className="w-4 h-4" />
-                홈으로
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/applicant/complaints')}
-                className="flex items-center gap-2 h-10 border-gray-200 text-gray-600"
-              >
-                <FileText className="w-4 h-4" />
-                과거 민원 보기
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+  return (
+    <div className="h-screen bg-gray-50 flex flex-col overflow-y-auto font-sans">
+      {/* 통합 툴바 사용 */}
+      <Toolbar subTitle="민원 상세 내역 조회" />
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="flex-1 max-w-[1700px] w-full mx-auto px-10 py-8">
         <div className="space-y-6">
           {/* Complaint Header Information */}
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -258,7 +245,7 @@ export default function ComplaintDetail() {
             </div>
 
             {/* Meta Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 bg-gray-50 border-b border-gray-200">
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6 border-b ${isClosed ? 'bg-slate-200/50 border-slate-300' : 'bg-gray-50 border-gray-200'}`}>
               <div className="flex items-start gap-3">
                 <Calendar className="w-5 h-5 text-gray-500 mt-1" />
                 <div>
@@ -361,6 +348,18 @@ export default function ComplaintDetail() {
                 </div>
               );
             })}
+            {isClosed && (
+              <div className="text-center py-12">
+                <div className="inline-block bg-slate-100 border-2 border-slate-200 rounded-xl px-10 py-6">
+                  <CheckCircle className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                  <p className="text-slate-700 font-bold text-lg">종결된 민원입니다</p>
+                  <p className="text-slate-500 text-sm mt-2">
+                    해당 민원은 처리가 완료되어 더 이상 추가 문의를 하실 수 없습니다.<br />
+                    새로운 문의가 있으시면 신규 민원을 등록해 주세요.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* 아직 답변이 없을 경우 */}
             {complaint.messages.filter(m => m.sender === 'department').length === 0 && (
@@ -376,26 +375,33 @@ export default function ComplaintDetail() {
               </div>
             )}
           </div>
-          <div className="p-4 bg-white border-t border-gray-200">
-            <div className="flex items-center gap-3"> {/* 수정: items-center로 수직 중앙 정렬 */}
-              <textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="추가 문의사항이나 의견이 있으시면 입력해주세요."
-                className="flex-1 min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
-              />
-              <Button
-                onClick={handleCommentSubmit}
-                disabled={!newComment.trim()}
-                className="px-6 bg-blue-600 hover:bg-blue-700 h-[80px] shrink-0" // 수정: self-end 제거 및 높이 고정 또는 부모 center에 맞춤
-              >
-                전송
-              </Button>
+          {!isClosed ? (
+            <div className="p-4 bg-white border-t border-gray-200">
+              <div className="flex items-center gap-3">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="추가 문의사항이나 의견이 있으시면 입력해주세요."
+                  className="flex-1 min-h-[80px] p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                />
+                <Button
+                  onClick={handleCommentSubmit}
+                  disabled={!newComment.trim()}
+                  className="px-6 bg-blue-600 hover:bg-blue-700 h-[80px] shrink-0"
+                >
+                  전송
+                </Button>
+              </div>
+              <p className="text-xs text-gray-400 mt-2">
+                * 추가 문의 시 담당 부서 확인 후 순차적으로 답변드립니다.
+              </p>
             </div>
-            <p className="text-xs text-gray-400 mt-2">
-              * 추가 문의 시 담당 부서 확인 후 순차적으로 답변드립니다.
-            </p>
-          </div>
+          ) : (
+            // 종결 시 입력창이 있던 자리에 나타나는 바
+            <div className="p-4 bg-slate-200 border-t border-slate-300 text-center">
+              <p className="text-slate-600 text-sm font-medium">종결된 민원에는 답변을 추가할 수 없습니다.</p>
+            </div>
+          )}
         </div>
 
         {/* Back Button at Bottom */}

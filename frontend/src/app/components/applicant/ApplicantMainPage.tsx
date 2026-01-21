@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import api from './AxiosInterface';
 import Swal from 'sweetalert2';
 import axios from 'axios';
+import { Button } from './ui/button';
+import { FileText, Home } from 'lucide-react';
 
 interface ComplaintDto {
   id: number;
@@ -14,40 +16,6 @@ interface ComplaintDto {
   complaintStatus: string; // status -> complaintStatus
   createdAt: string;       // submittedDate -> createdAt
 }
-
-// Mock data for response time statistics
-const mockResponseTimeData = [
-  { category: '도로/교통', avgDays: 3.2 },
-  { category: '환경/위생', avgDays: 5.1 },
-  { category: '공원/시설', avgDays: 4.5 },
-  { category: '안전/치안', avgDays: 2.8 },
-  { category: '기타', avgDays: 6.3 },
-];
-
-const mockOverallStats = {
-  averageResponseTime: 4.4,
-  fastestCategory: '안전/치안',
-  improvementRate: 12,
-};
-
-// Mock data for keywords
-const mockKeywords = [
-  { text: '가로등', value: 45 },
-  { text: '주정차', value: 38 },
-  { text: '포트홀', value: 32 },
-  { text: '쓰레기', value: 28 },
-  { text: '소음', value: 25 },
-  { text: '교통', value: 22 },
-  { text: '안전', value: 20 },
-  { text: '보수', value: 18 },
-  { text: '보도', value: 15 },
-  { text: '공원', value: 12 },
-  { text: '하수구', value: 10 },
-  { text: '가로수', value: 8 },
-  { text: '공사', value: 7 },
-  { text: '불법', value: 6 },
-];
-
 
 interface ResponseTimeData {
   category: string;
@@ -79,10 +47,12 @@ const ApplicantMainPage = () => {
   const checkAuth = (action: () => void) => {
     if (!isLoggedIn) {
       Swal.fire({
-        title: '로그인 필요',
-        text: '이 기능을 이용하려면 로그인이 필요합니다.',
+        title: '로그인이 필요합니다',
+        text: '민원 서비스 이용을 위해 로그인을 먼저 진행해 주세요.',
         icon: 'info',
         showCancelButton: true,
+        confirmButtonColor: '#1e40af', // blue-800
+        cancelButtonColor: '#64748b', // slate-500
         confirmButtonText: '로그인 하러 가기',
         cancelButtonText: '나중에 하기'
       }).then((result) => {
@@ -127,7 +97,6 @@ const ApplicantMainPage = () => {
 
     const fetchRecentComplaints = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
         // 백엔드 API 호출 - 최근 3개의 민원 불러오기
         // 백엔드에서 만든 최신 3개 전용 API 호출
         const [complaintsRes, statsRes, keywordsRes] = await Promise.all([
@@ -161,23 +130,19 @@ const ApplicantMainPage = () => {
   }, [isLoggedIn]);
 
   return (
-    <div className="min-h-screen bg-[#F4F7FB] overflow-hidden font-sans text-slate-900">
-      <Toolbar
-        isLoggedIn={isLoggedIn} // 로그인 상태 전달
-        onViewComplaints={handleViewComplaints}
-        onNewComplaint={handleNewComplaint}
-        onLogout={handleLogout}
-      />
+    <div className="min-h-screen bg-gradient-to-br from-[#EAF2FF] via-[#F4F7FB] to-white overflow-hidden font-sans text-slate-900">
+      {/* 통합 툴바 사용 */}
+      <Toolbar subTitle="정부 민원 포털" />
 
       <main className="max-w-[1700px] mx-auto px-10 h-[calc(100vh-100px)] flex flex-col justify-center py-4">
         {/* 황금비 레이아웃: 좌(3) : 우(2) */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 h-full max-h-[850px]">
 
           {/* [좌측 섹션] 민원 TOP3 + 키워드 맵 (60%) */}
-          <div className="lg:col-span-2 flex flex-col gap-8 h-full overflow-hidden">
+          <div className="lg:col-span-2 flex flex-col gap-8 h-full min-h-0">
             {/* 최근 민원 현황 */}
-            <section className="flex-1 bg-white rounded-[40px] border border-gray-100 shadow-sm p-8 flex flex-col min-h-0">
-              <div className="flex justify-between items-center mb-6 shrink-0">
+            <section className="bg-white rounded-[20px] border border-slate-200/70 shadow-sm ring-1 ring-slate-900/5 p-8 flex flex-col shrink-0 h-[340px] transition-shadow hover:shadow-md">
+              <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">📋</span>
                   <h3 className="text-lg font-bold text-gray-800">최근 민원 현황</h3>
@@ -190,7 +155,7 @@ const ApplicantMainPage = () => {
                 </button>
               </div>
 
-              <div className="flex-1 flex flex-col gap-2 min-h-0">
+              <div className="flex flex-col gap-2">
                 {isLoading ? (
                   <div className="flex-1 flex justify-center items-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -199,41 +164,38 @@ const ApplicantMainPage = () => {
                   /* 1. 민원이 1건이라도 있는 경우: 리스트 + 부족한 칸 채우기 */
                   <>
                     {/* 실제 민원 데이터 표시 (최대 3개) */}
-                    <div className="flex-1 flex flex-col gap-3">
-                      {recentComplaints.slice(0, 3).map((complaint) => (
-                        <div
-                          key={complaint.id}
-                          className="group flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-transparent hover:border-blue-200 hover:bg-white transition-all cursor-pointer flex-1 min-h-0"
-                          onClick={() => checkAuth(() => navigate(`/applicant/complaints/${complaint.id}`))}
-                        >
-                          <div className="flex items-center gap-4 overflow-hidden">
-                            <span className={`shrink-0 px-2 py-0.5 rounded-md text-[9px] font-bold text-white ${complaint.complaintStatus === 'ANSWERED' ? 'bg-green-500' :
-                              complaint.complaintStatus === 'ASSIGNED' ? 'bg-blue-500' : 'bg-orange-500'
-                              }`}>
-                              {complaint.complaintStatus}
-                            </span>
-                            <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600 truncate">
-                              {complaint.title}
-                            </h4>
-                          </div>
-                          <div className="flex items-center gap-3 shrink-0 text-gray-400">
-                            <span className="text-[11px] font-medium">{new Date(complaint.createdAt).toLocaleDateString()}</span>
-                            <span className="group-hover:translate-x-1 transition-transform">→</span>
-                          </div>
+                    {recentComplaints.slice(0, 3).map((complaint) => (
+                      <div
+                        key={complaint.id}
+                        className="group flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200/80 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer h-[64px] shrink-0"
+                        onClick={() => checkAuth(() => navigate(`/applicant/complaints/${complaint.id}`))}
+                      >
+                        <div className="flex items-center gap-4 overflow-hidden">
+                          <span className={`shrink-0 px-2 py-0.5 rounded-md text-[9px] font-bold text-white ${complaint.complaintStatus === 'ANSWERED' ? 'bg-green-500' :
+                            complaint.complaintStatus === 'ASSIGNED' ? 'bg-blue-500' : 'bg-orange-500'
+                            }`}>
+                            {complaint.complaintStatus}
+                          </span>
+                          <h4 className="text-sm font-bold text-gray-800 group-hover:text-blue-600 truncate">
+                            {complaint.title}
+                          </h4>
                         </div>
-                      ))}
+                        <div className="flex items-center gap-3 shrink-0 text-gray-400">
+                          <span className="text-[11px] font-medium">{new Date(complaint.createdAt).toLocaleDateString()}</span>
+                          <span className="group-hover:translate-x-1 transition-transform">→</span>
+                        </div>
+                      </div>
+                    ))}
 
-                      {/* 3건 미만일 때만 부족한 칸을 Placeholder로 채움 (1~2건일 때 작동) */}
-                      {recentComplaints.length < 3 && [...Array(3 - recentComplaints.length)].map((_, i) => (
-                        <div
-                          key={`empty-${i}`}
-                          onClick={handleNewComplaint}
-                          className="flex-1 border-2 border-dashed border-gray-100 rounded-2xl flex items-center justify-center text-gray-400 text-xs hover:bg-gray-50 hover:border-blue-100 cursor-pointer transition-colors"
-                        >
-                          <span className="opacity-60">+ 새 민원 추가</span>
-                        </div>
-                      ))}
-                    </div>
+                    {/* 3건 미만일 때만 부족한 칸을 Placeholder로 채움 (1~2건일 때 작동) */}
+                    {recentComplaints.length < 3 && [...Array(3 - recentComplaints.length)].map((_, i) => (
+                      <div
+                        key={`empty-${i}`}
+                        onClick={handleNewComplaint}
+                        className="h-[64px] border-2 border-dashed border-slate-200/80 rounded-2xl flex items-center justify-center text-slate-400 text-xs hover:bg-slate-50 hover:border-blue-200 cursor-pointer transition-colors shrink-0"                      >
+                        <span className="opacity-60">+ 새 민원 추가</span>
+                      </div>
+                    ))}
                   </>
                 ) : (
                   /* 2. 민원이 아예 없는 경우 (0건): 큰 안내 상자만 표시 */
@@ -250,8 +212,9 @@ const ApplicantMainPage = () => {
               </div>
             </section>
 
+
             {/* 2. 실시간 민원 키워드: flex-1을 사용하여 남는 아래쪽 모든 공간 차지 */}
-            <section className="flex-1 bg-white/60 rounded-[40px] border border-blue-100/50 shadow-sm p-8 flex flex-col min-h-0 overflow-hidden">
+            <section className="flex-1 bg-white rounded-[20px] border border-slate-200/70 shadow-sm ring-1 ring-slate-900/5 p-8 transition-shadow hover:shadow-md flex flex-col overflow-hidden min-h-0">
               <div className="flex items-center gap-2 mb-4 shrink-0">
                 <span className="text-lg">🔍</span>
                 <h3 className="text-lg font-bold text-gray-800">실시간 민원 키워드</h3>
@@ -267,7 +230,7 @@ const ApplicantMainPage = () => {
           </div>
 
           {/* [우측 섹션] 통계 분석 (40%) */}
-          <section className="lg:col-span-2 bg-white rounded-[40px] border border-gray-100 shadow-sm flex flex-col h-full overflow-hidden">
+          <section className="lg:col-span-2 bg-white rounded-[20px] border border-slate-200/70 shadow-sm ring-1 ring-slate-900/5 transition-shadow hover:shadow-md flex flex-col h-full overflow-hidden">
             <div className="p-10 flex flex-col h-full">
               <div className="flex flex-col gap-1 mb-10 shrink-0">
                 <div className="flex items-center gap-2">
@@ -289,9 +252,9 @@ const ApplicantMainPage = () => {
             </div>
           </section>
 
-        </div>
-      </main>
-    </div>
+        </div >
+      </main >
+    </div >
   );
 }
 

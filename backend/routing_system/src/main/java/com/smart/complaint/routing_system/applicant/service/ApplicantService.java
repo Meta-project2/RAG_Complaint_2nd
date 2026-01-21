@@ -150,9 +150,29 @@ public class ApplicantService {
         return true;
     }
 
-    public List<ComplaintDto> getTop3RecentComplaints(Long applicantId) {
+    private boolean isPureNumeric(String str) {
+        return str != null && str.matches("\\d+");
+    }
 
-        return complaintRepository.findTop3RecentComplaintByApplicantId(applicantId);
+    public List<ComplaintDto> getTop3RecentComplaints(String applicantId) {
+        Long actualUserId = null;
+
+        if (isPureNumeric(applicantId)) {
+            // 숫자라면 PK일 가능성이 높으므로 먼저 exists 체크
+            if (userRepository.existsById(Long.parseLong(applicantId))) {
+                actualUserId = Long.parseLong(applicantId);
+            }
+        }
+
+        // 2. PK가 아니거나 검색 실패 시 Querydsl로 소셜 유저 조회
+        if (actualUserId == null) {
+            User socialUser = userRepository.findByProviderIdLike(applicantId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + applicantId));
+            actualUserId = socialUser.getId();
+        }
+
+        Long id = Long.parseLong(applicantId);
+        return complaintRepository.findTop3RecentComplaintByApplicantId(id);
     }
 
     public ComplaintDetailDto getComplaintDetails(Long complaintId) {
@@ -167,9 +187,23 @@ public class ApplicantService {
 
     public List<ComplaintListDto> getAllComplaints(String applicantId, String keyword) {
 
-        Long id = Long.parseLong(applicantId);
+        Long actualUserId = null;
 
-        return complaintRepository.findAllByApplicantId(id, keyword);
+        if (isPureNumeric(applicantId)) {
+            // 숫자라면 PK일 가능성이 높으므로 먼저 exists 체크
+            if (userRepository.existsById(Long.parseLong(applicantId))) {
+                actualUserId = Long.parseLong(applicantId);
+            }
+        }
+
+        // 2. PK가 아니거나 검색 실패 시 Querydsl로 소셜 유저 조회
+        if (actualUserId == null) {
+            User socialUser = userRepository.findByProviderIdLike(applicantId)
+                    .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + applicantId));
+            actualUserId = socialUser.getId();
+        }
+
+        return complaintRepository.findAllByApplicantId(actualUserId, keyword);
     }
 
     public List<ComplaintHeatMap> getAllComplaintsWithLatLon() {

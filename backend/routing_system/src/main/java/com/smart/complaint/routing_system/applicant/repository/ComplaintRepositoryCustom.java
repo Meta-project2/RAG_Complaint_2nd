@@ -50,7 +50,9 @@ public interface ComplaintRepositoryCustom {
     List<CategoryStatDto> getCategoryStats(LocalDateTime start, LocalDateTime end);
 
     // 6. 반복 민원 Top 3
-    List<RecurringIncidentDto> getTopRecurringIncidents(LocalDateTime start, LocalDateTime end, LocalDateTime prevStart, LocalDateTime prevEnd);
+    List<RecurringIncidentDto> getTopRecurringIncidents(LocalDateTime start, LocalDateTime end, LocalDateTime prevStart,
+            LocalDateTime prevEnd);
+
     List<ChildComplaintDto> findChildComplaintsByParentId(Long id);
 
     // 7. 민원 분석
