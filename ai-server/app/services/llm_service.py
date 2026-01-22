@@ -17,8 +17,8 @@ class LLMService:
         self.embed_model = "text-embedding-3-large"
         self.chat_model = "gpt-4o-mini"
 
+    # 텍스트를 벡터로 변환
     async def get_embedding(self, text: str) -> List[float]:
-        """텍스트를 벡터로 변환"""
         try:
             text = text.replace("\n", " ")
             response = client.embeddings.create(
@@ -40,7 +40,7 @@ class LLMService:
 
         # 법령 찾기 
         if action == "search_law":
-            print(f"🔍 [Button] 민원 #{complaint_id} 법령 검색")
+            print(f"민원 #{complaint_id} 법령 검색")
             laws = database.search_laws_by_id(complaint_id, limit=3)
 
             context_text = ""
@@ -53,7 +53,7 @@ class LLMService:
             user_msg = f"이 민원과 관련된 법령/규정을 찾아줘.\n\n[참고 자료]:\n{context_text}"
 
         elif action == "search_case":
-            print(f"🔍 [Button] 민원 #{complaint_id} 유사 사례 검색")
+            print(f"민원 #{complaint_id} 유사 사례 검색")
             # DB에서 유사 사례 조회
             raw_cases = database.search_cases_by_id(complaint_id, limit=3)
 
@@ -64,7 +64,7 @@ class LLMService:
             # 유사도 필터링
             cases = [c for c in raw_cases if c.get('similarity', 0) >= 00.0]
             if not cases:
-                print("   --> 🚨 필터링 후 남은 사례가 0개여서 즉시 리턴합니다.")
+                print("   --> 필터링 후 남은 사례가 0개여서 즉시 리턴합니다.")
                 return {
                     "answer": "과거 데이터 분석 결과, 현재 민원과 유사도가 높은 처리 사례가 없습니다. (유사도 60% 이상 건 없음)",
                     "documents": []
@@ -81,7 +81,7 @@ class LLMService:
 
         # 채팅 기능
         else:
-            print(f"🔍 [Chat] 사용자 질문: {user_query}")
+            print(f"사용자 질문: {user_query}")
             if user_query:
                 vec = await self.get_embedding(user_query)
                 if vec:

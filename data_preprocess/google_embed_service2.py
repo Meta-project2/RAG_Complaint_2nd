@@ -7,7 +7,6 @@ from psycopg2.extras import Json
 import requests
 from datetime import datetime
 
-# --- 설정 섹션 ---
 DB_CONFIG = {
     "host": "localhost",
     "database": "postgres",

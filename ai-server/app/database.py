@@ -17,8 +17,8 @@ DB_CONFIG = {
     "port": int(os.getenv("DB_PORT", 5432))
 }
 
+# db 연결
 def get_db_connection():
-    """DB에 연결하고 커넥션 객체를 반환하는 함수"""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         return conn

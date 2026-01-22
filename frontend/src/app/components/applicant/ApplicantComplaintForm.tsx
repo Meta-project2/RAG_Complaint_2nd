@@ -1,19 +1,15 @@
 import { useState } from 'react';
-import { Home, FileText, MapPin } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { Calendar } from './ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { format } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import { cn } from './ui/utils';
 import KakaoMap from './KakaoMap';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import api from './AxiosInterface';
 import { Toolbar } from './toolbar';
+import { MapPin } from 'lucide-react';
 
 interface NewComplaintFormProps {
   onGoHome: () => void;
@@ -42,15 +38,15 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
 
   // 지도의 위치가 바뀔 때 실행될 함수
   const handleLocationChange = (lat: number, lon: number, roadAddress: string) => {
-    // 1. 위도, 경도, 도로명 주소를 객체에 저장 (전송용)
+    // 위도, 경도, 도로명 주소를 객체에 저장 (전송용)
     setGeoData({ lat, lon, roadAddress });
 
-    // 2. 상단 Input 창에 표시되는 주소 텍스트를 마커 위치의 주소로 자동 업데이트!
+    // 상단 Input 창에 표시되는 주소 텍스트를 마커 위치의 주소로 자동 업데이트
     setLocation(roadAddress);
   };
 
   const handleSubmit = async () => {
-    // 백엔드로 보낼 데이터 (DTO 구조)
+    // 백엔드로 보낼 데이터
     const submitData = {
       title,
       body,
@@ -64,10 +60,11 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
       html: `<b>확인된 위치:</b><br/>${submitData.addressText}`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: '제출하기',
       cancelButtonText: '취소',
-      confirmButtonColor: '#1677d3',
+      confirmButtonText: '제출하기',
       cancelButtonColor: 'rgb(230, 190, 61)',
+      confirmButtonColor: '#1677d3',
+      reverseButtons: true
     }).then((result) => {
       if (result.isConfirmed) {
         let timerInterval: ReturnType<typeof setInterval> | undefined;
@@ -100,7 +97,6 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
           willClose: () => clearInterval(timerInterval)
         });
 
-        // 2. API 호출 (await를 사용하지 않고 바로 실행)
         api.post('applicant/complaint', submitData, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -108,9 +104,7 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
           }
         })
           .then(() => {
-            // 성공 시: 이미 창이 닫혀있을 수도 있으므로 토스트 알림이나 조용한 알림 권장
             console.log("백그라운드 접수 완료");
-            // 만약 창이 아직 열려있다면 성공 화면으로 전환 가능
             if (Swal.isVisible()) {
               Swal.fire({
                 title: '접수 완료!',
@@ -142,14 +136,9 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden font-sans">
-      {/* 통합 툴바 사용 */}
       <Toolbar subTitle="민원 작성" />
-
-      {/* [본문 컨텐츠] 툴바를 제외한 나머지 높이 전체 사용 */}
       <main className="flex-1 max-w-[1700px] w-full mx-auto px-10 py-6 overflow-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 h-full">
-
-          {/* [좌측 섹션] 민원 내용 입력 */}
           <section className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col min-h-0">
             <div className="flex items-center gap-2 mb-6 shrink-0">
               <span className="text-lg">✍️</span>
@@ -157,7 +146,6 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
             </div>
 
             <div className="space-y-4 flex-1 flex flex-col min-h-0">
-              {/* 제목 입력 */}
               <div className="space-y-2 shrink-0">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="title" className="text-sm font-bold text-gray-700">민원 제목 <span className="text-red-500">*</span></Label>
@@ -174,7 +162,6 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
                 />
               </div>
 
-              {/* 본문 입력: flex-1과 min-h-0으로 남은 공간 모두 차지 */}
               <div className="flex-1 flex flex-col space-y-2 min-h-0">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="body" className="text-sm font-bold text-gray-700">민원 상세 내용 <span className="text-red-500">*</span></Label>
@@ -193,7 +180,6 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
             </div>
           </section>
 
-          {/* [우측 섹션] 지도 및 버튼 통합 */}
           <section className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-8 flex flex-col min-h-0">
             <div className="flex items-center gap-2 mb-6 shrink-0">
               <span className="text-lg">📍</span>
@@ -201,7 +187,6 @@ export function ApplicantComplaintForm({ onPreview }: NewComplaintFormProps) {
             </div>
 
             <div className="flex-1 flex flex-col space-y-4 min-h-0">
-              {/* 주소 입력 */}
               <div className="space-y-2 shrink-0">
                 <Label className="text-xs font-bold text-gray-500 uppercase px-1">상세 주소</Label>
                 <div className="relative">
