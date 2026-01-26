@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 # ==========================================
 
 DB_CONFIG = {
-    "host": "0.0.0.0",
+    "host": "db",
     "dbname": "postgres",
     "user": "postgres",
     "password": "0000",
@@ -329,65 +329,52 @@ def sync_incident_status(conn):
 # ==========================================
 
 def run_daily_job():
-    conn = get_db_connection()
-    try:
-        # 1. 신규 민원 조회 (아직 사건 번호 없는 것)
-        sql = """
-            SELECT n.complaint_id as id, n.core_request, n.embedding,
-                   n.keywords_jsonb, n.district_id, n.target_object, 
-                   d.name as district_name
-            FROM complaint_normalizations n
-            JOIN complaints c ON n.complaint_id = c.id
-            LEFT JOIN districts d ON n.district_id = d.id
-            WHERE c.incident_id IS NULL 
-            LIMIT 100        
-        """
-        
+    with engine.begin() as conn:
         try:
-            new_df = pd.read_sql(sql, engine)
-            # 추가: district_id가 NULL인 경우 0으로 미리 채우기
-            new_df['district_id'] = new_df['district_id'].fillna(0) 
-        except Exception as e:
-            logging.error(f"데이터 조회 실패: {e}")
-            return
+            # 1. 신규 민원 조회 (아직 사건 번호 없는 것)
+            sql = """
+                SELECT n.complaint_id as id, n.core_request, n.embedding,
+                    n.keywords_jsonb, n.district_id, n.target_object, 
+                    d.name as district_name
+                FROM complaint_normalizations n
+                JOIN complaints c ON n.complaint_id = c.id
+                LEFT JOIN districts d ON n.district_id = d.id
+                WHERE c.incident_id IS NULL 
+                LIMIT 100        
+            """
+            new_df = pd.read_sql(sql, conn)
+            new_df['district_id'] = new_df['district_id'].fillna(0)
 
-        if not new_df.empty:
-            logging.info(f"⚡ 신규 민원 {len(new_df)}건 감지!")
-            
-            # [Step 1] 하이브리드 검색으로 기존 사건에 병합 (SQL 엔진 사용)
-            remaining_df = try_merge_to_existing_incidents_hybrid(conn, new_df)
-            
-            # [Step 2] 남은 민원끼리 뭉쳐서 새 사건 만들기 (DBSCAN 사용)
-            if not remaining_df.empty:
-                cluster_remaining_complaints(conn, remaining_df)
+            if not new_df.empty:
+                logging.info(f"🚀 신규 민원 {len(new_df)}건 감지 및 처리 시작")
                 
-            logging.info("✅ 이번 주기 처리 완료.")
-        
-        sync_incident_status(conn)
+                # psycopg2 전용 로직이 필요하다면 raw connection 활용
+                raw_conn = conn.connection
+                
+                # [Step 1] 하이브리드 병합
+                remaining_df = try_merge_to_existing_incidents_hybrid(raw_conn, new_df)
+                
+                # [Step 2] 신규 군집화
+                if not remaining_df.empty:
+                    cluster_remaining_complaints(raw_conn, remaining_df)
+                
+                logging.info("✅ 주기적 군집화 작업 완료")
+            
+            # 상태 동기화
+            sync_incident_status(raw_conn)
 
-    except Exception as e:
-        conn.rollback()
-        logging.error(f"❌ 전체 로직 에러: {e}")
-    finally:
-        conn.close()
+        except Exception as e:
+            logging.error(f"❌ 작업 중 에러 발생: {e}")
 
-def print_progress_bar(duration):
-    width = 30
-    for i in range(duration):
-        time.sleep(1)
-        progress = int((i + 1) / duration * width)
-        bar = '█' * progress + '-' * (width - progress)
-        sys.stdout.write(f"\r⏳ 대기 중... [{bar}] {duration - i - 1}초 ")
-        sys.stdout.flush()
-    sys.stdout.write("\r" + " " * 80 + "\r") 
+def wait_interval(duration):
+    # logging.debug(f"{duration}초 대기 중...") # 굳이 안 남겨도 됨
+    time.sleep(duration)
 
 if __name__ == "__main__":
-    print("\n" + "="*60)
-    print("🤖 [Hybrid Cluster] 실시간 민원 군집화 (SQL 가속 버전)")
-    print(f"   - 확인 주기: {CHECK_INTERVAL}초")
-    print(f"   - 하이브리드 점수 기준: {HYBRID_THRESHOLD}점")
+    logging.info("🤖 [Hybrid Cluster] 서버 서비스 시작")
+    logging.info(f"   - 하이브리드 점수 기준: {HYBRID_THRESHOLD}점")
     print("="*60 + "\n")
 
     while True:
         run_daily_job()
-        print_progress_bar(CHECK_INTERVAL)
+        wait_interval(CHECK_INTERVAL)
