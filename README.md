@@ -52,7 +52,7 @@
 
 ## 🏗 3. 시스템 아키텍처 (System Architecture)
 
-*(PPT 8페이지의 아키텍처 다이어그램 참조)*
+<img width="1067" height="487" alt="Image" src="https://github.com/user-attachments/assets/3d28623c-f43c-41db-b15e-e1fe586c586b" />
 
 ### 🔄 데이터 흐름
 
@@ -75,7 +75,7 @@
 
 5. **Database:** 민원 데이터, 사용자 정보, 벡터 데이터(임베딩된 법령/사례) 저장.
 
-
+<img width="2386" height="1346" alt="Image" src="https://github.com/user-attachments/assets/2d147d3f-e512-408b-8ecb-9abb21d2bc44" />
 
 ---
 
@@ -135,7 +135,7 @@
 
 * **일괄 처리:** 군집화된 민원은 '대표 민원'으로 묶어 한 번에 답변 처리 가능.
 
-
+<img width="702" height="602" alt="Image" src="https://github.com/user-attachments/assets/2d08673f-3784-4e7f-93d0-0d741a6fe4e6" />
 
 ### 📊 4.4. 실시간 운영 대시보드
 
@@ -147,7 +147,7 @@
 
 * **Issue Tracking:** '포트홀', '불법주정차' 등 급상승 키워드(Top-N) 실시간 모니터링.
 
-
+<img width="1630" height="824" alt="Image" src="https://github.com/user-attachments/assets/f445cd2c-7464-4e76-a08a-9fcb308f89e6" />
 
 ---
 
